@@ -11,6 +11,7 @@ REQUIRED_COMMANDS=(
     "git"
     "curl"
     "make"
+    "gawk"
 )
 
 # Optional but recommended
@@ -47,6 +48,7 @@ check_prerequisites_module() {
     else
         log_success "C compiler is installed"
     fi
+    
     
     # Report missing optional tools
     if [[ ${#optional_missing[@]} -gt 0 ]]; then
@@ -92,6 +94,7 @@ install_prerequisites_module() {
         fi
     fi
     
+    
     if [[ ${#to_install[@]} -eq 0 ]]; then
         log_success "All prerequisites already installed"
         return 0
@@ -136,13 +139,13 @@ ${BLUE}Options:${NC}
 1. Install manually using your package manager:
    
    Debian/Ubuntu:
-   $ sudo apt-get update && sudo apt-get install -y git curl make build-essential
+   $ sudo apt-get update && sudo apt-get install -y git curl make build-essential gawk
    
    RHEL/CentOS/Fedora:
-   $ sudo dnf install -y git curl make gcc gcc-c++
+   $ sudo dnf install -y git curl make gcc gcc-c++ gawk
    
    Arch Linux:
-   $ sudo pacman -S git curl make base-devel
+   $ sudo pacman -S git curl make base-devel gawk
 
 2. Run this installer with the --install-prereqs flag:
    $ ./install.sh --install-prereqs
