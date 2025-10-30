@@ -288,6 +288,9 @@ EOF
     # Initialize OS detection
     init_common
     
+    # Export flags for prerequisite module
+    export INSTALL_PREREQS
+    
     # Check prerequisites
     log_info "Checking prerequisites..."
     if ! bash "$SCRIPT_DIR/modules/00-prereqs.sh"; then
@@ -313,10 +316,28 @@ EOF
     
     # Run installation modules
     local failed_modules=()
+    local critical_modules=("10-bash-it" "20-blesh" "30-fzf")
+    
     for module in "${modules_to_install[@]}"; do
         if ! run_module "$module"; then
             failed_modules+=("$module")
-            log_warning "Continuing despite failure..."
+            
+            # Check if this is a critical module
+            local is_critical=false
+            for critical in "${critical_modules[@]}"; do
+                if [[ "$module" == "$critical" ]]; then
+                    is_critical=true
+                    break
+                fi
+            done
+            
+            if [[ "$is_critical" == "true" ]]; then
+                log_error "Critical module failed: $module"
+                log_error "Cannot continue installation"
+                exit 1
+            else
+                log_warning "Non-critical module failed, continuing..."
+            fi
         fi
         echo ""  # Blank line between modules
     done
@@ -330,18 +351,16 @@ EOF
     
     # Report results
     if [[ ${#failed_modules[@]} -gt 0 ]]; then
-        log_warning "Installation completed with errors"
-        log_warning "Failed modules: ${failed_modules[*]}"
+        log_warning "Installation completed with some optional components skipped"
+        log_warning "Skipped modules: ${failed_modules[*]}"
+        log_info "These are non-critical and the environment will work without them"
         echo ""
     fi
     
     # Show completion message
     show_completion_message
     
-    if [[ ${#failed_modules[@]} -gt 0 ]]; then
-        exit 1
-    fi
-    
+    # Success even if non-critical modules failed
     exit 0
 }
 
