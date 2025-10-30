@@ -469,4 +469,4 @@ For issues, questions, or to report possession by rogue shell scripts:
 
 ---
 
-**The Emperor Protects... from bad shell configurations.**
+**The Emporer Protects… but Slaane.sh Perfects.**
