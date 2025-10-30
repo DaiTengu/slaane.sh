@@ -9,6 +9,30 @@ check_zoxide_installed() {
     command_exists zoxide
 }
 
+enable_epel_if_needed() {
+    # Enable EPEL for RHEL-based systems if not already enabled
+    if [[ "$OS_FAMILY" != "rhel" ]]; then
+        return 0  # Not needed
+    fi
+    
+    # Check if EPEL is already enabled
+    if run_as_root $PKG_MANAGER repolist 2>/dev/null | grep -q epel; then
+        log_info "EPEL repository already enabled"
+        return 0
+    fi
+    
+    log_info "Enabling EPEL repository..."
+    
+    # Install epel-release package
+    if run_as_root $PKG_INSTALL epel-release 2>/dev/null; then
+        log_success "EPEL repository enabled"
+        return 0
+    else
+        log_warning "Failed to enable EPEL repository"
+        return 1
+    fi
+}
+
 install_zoxide_from_package_manager() {
     log_info "Attempting to install zoxide from package manager..."
     
@@ -19,7 +43,12 @@ install_zoxide_from_package_manager() {
             pkg="zoxide"
             ;;
         dnf|yum)
-            # Available in Fedora 35+ and RHEL 9+
+            # Available in EPEL for RHEL/Rocky/CentOS
+            # Enable EPEL first
+            if ! enable_epel_if_needed; then
+                log_info "Cannot enable EPEL, will try other methods"
+                return 1
+            fi
             pkg="zoxide"
             ;;
         pacman)
@@ -28,7 +57,7 @@ install_zoxide_from_package_manager() {
     esac
     
     if [[ -z "$pkg" ]]; then
-        log_info "zoxide not available in package manager, will use cargo"
+        log_info "zoxide not available in package manager"
         return 1
     fi
     
@@ -36,7 +65,7 @@ install_zoxide_from_package_manager() {
         log_success "zoxide installed from package manager"
         return 0
     else
-        log_info "Package manager installation failed, will try cargo"
+        log_info "Package manager installation failed, will try other methods"
         return 1
     fi
 }
@@ -73,7 +102,7 @@ install_zoxide_prebuilt() {
     
     local arch=$(uname -m)
     local os="unknown-linux-musl"
-    local version="v0.9.4"  # Latest as of creation, adjust as needed
+    local version="v0.9.6"  # Updated version
     
     case "$arch" in
         x86_64)
@@ -124,6 +153,28 @@ install_zoxide_prebuilt() {
     fi
 }
 
+install_zoxide_from_official_script() {
+    log_info "Installing zoxide from official install script..."
+    
+    if ! curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash; then
+        log_error "Failed to install zoxide from official script"
+        return 1
+    fi
+    
+    # The script installs to ~/.local/bin
+    if [[ -d "$HOME/.local/bin" ]]; then
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
+    
+    if command_exists zoxide; then
+        log_success "zoxide installed from official script"
+        return 0
+    else
+        log_error "zoxide installation verification failed"
+        return 1
+    fi
+}
+
 install_zoxide() {
     log_info "Installing zoxide..."
     
@@ -139,21 +190,20 @@ install_zoxide() {
         return 0
     fi
     
-    # 2. Prebuilt binary (no compilation needed)
-    if install_zoxide_prebuilt; then
+    # 2. Official install script (downloads correct prebuilt binary)
+    if install_zoxide_from_official_script; then
         return 0
     fi
     
-    # 3. Cargo (requires Rust but works everywhere)
-    if install_zoxide_from_cargo; then
+    # 3. Cargo (only if available - we don't install it as prereq anymore)
+    if command_exists cargo && install_zoxide_from_cargo; then
         return 0
     fi
     
     log_error "All zoxide installation methods failed"
     log_info "Please install manually:"
     log_info "  - Via package manager if available"
-    log_info "  - Via cargo: cargo install zoxide"
-    log_info "  - From releases: https://github.com/ajeetdsouza/zoxide/releases"
+    log_info "  - Using: curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh"
     return 1
 }
 
