@@ -57,40 +57,62 @@ sudo usermod -aG docker $USER
 
 ### Basic Docker Tests
 
+**Important:** By default, tests run with only the `default` installation mode. Use `--all-modes` to test all modes.
+
 ```bash
-# Test on all distributions (takes a while!)
+# Test all distributions with default mode (recommended for quick testing)
 ./test-docker.sh
 
-# Test specific distribution
+# Test all distributions with ALL modes (very slow!)
+./test-docker.sh --all-modes
+
+# Test specific distribution with default mode
 ./test-docker.sh --distro ubuntu
 ./test-docker.sh --distro fedora
 ./test-docker.sh --distro rockylinux
 
-# Test specific version
+# Test specific distribution with ALL modes
+./test-docker.sh --distro ubuntu --all-modes
+
+# Test specific version with default mode
 ./test-docker.sh --distro ubuntu:22.04
+
+# Test Rocky Linux 9 specifically
+./test-docker.sh --distro rockylinux:9
 ```
 
 ### Test Different Installation Modes
 
+**Note:** These test specific modes across all distributions. For single distro + mode, see Combined Tests below.
+
 ```bash
-# Test minimal installation
+# Test minimal installation on all distros
 ./test-docker.sh --mode minimal
 
-# Test with bashhub
+# Test with bashhub on all distros
 ./test-docker.sh --mode with-bashhub
 
-# Test skipping components
+# Test skipping components on all distros
 ./test-docker.sh --mode skip-goenv
+
+# Test all modes on all distros (VERY slow - not recommended)
+./test-docker.sh --all-modes
 ```
 
 ### Combined Tests
 
 ```bash
-# Test Ubuntu with minimal installation
+# Test Ubuntu with minimal installation (single test)
 ./test-docker.sh --distro ubuntu --mode minimal
 
-# Test Fedora with specific configuration
-./test-docker.sh --distro fedora:39 --mode default
+# Test Fedora 39 with default installation (single test)
+./test-docker.sh --distro fedora:39
+
+# Test Rocky Linux 9 with all modes (4 tests)
+./test-docker.sh --distro rockylinux:9 --all-modes
+
+# Test Debian with skip-goenv mode (single test)
+./test-docker.sh --distro debian --mode skip-goenv
 ```
 
 ### Interactive Testing
@@ -136,9 +158,27 @@ The following distributions are tested:
 
 ## Test Scenarios
 
-### 1. Default Installation
+### 1. Quick Single Distribution Test (Recommended)
 
-Tests all core components:
+Test one distribution with default mode (fastest):
+
+```bash
+# Test Rocky Linux 9 only
+./test-docker.sh --distro rockylinux:9
+
+# Test Ubuntu 22.04 only
+./test-docker.sh --distro ubuntu:22.04
+```
+
+### 2. Default Installation on All Distros
+
+Tests all distributions with default mode (all core components):
+
+```bash
+./test-docker.sh
+```
+
+Components tested:
 - bash-it
 - ble.sh
 - fzf
@@ -147,32 +187,55 @@ Tests all core components:
 - goenv
 - thefuck
 
-```bash
-./test-docker.sh --mode default
-```
-
-### 2. Minimal Installation
+### 3. Minimal Installation
 
 Tests minimal setup (bash-it, ble.sh, fzf only):
 
 ```bash
+# Minimal on all distros
 ./test-docker.sh --mode minimal
+
+# Minimal on specific distro
+./test-docker.sh --distro ubuntu --mode minimal
 ```
 
-### 3. Component Skipping
+### 4. Component Skipping
 
 Tests installation with some components skipped:
 
 ```bash
+# Skip goenv on all distros
 ./test-docker.sh --mode skip-goenv
+
+# Skip goenv on Rocky Linux only
+./test-docker.sh --distro rockylinux --mode skip-goenv
 ```
 
-### 4. With Optional Components
+### 5. With Optional Components
 
 Tests with bashhub included:
 
 ```bash
+# With bashhub on all distros
 ./test-docker.sh --mode with-bashhub
+
+# With bashhub on Fedora only
+./test-docker.sh --distro fedora --mode with-bashhub
+```
+
+### 6. All Modes (Comprehensive but Slow)
+
+Tests all installation modes:
+
+```bash
+# All modes on all distros (36 tests - very slow!)
+./test-docker.sh --all-modes
+
+# All modes on Ubuntu only (4 tests - moderate)
+./test-docker.sh --distro ubuntu --all-modes
+
+# All modes on Rocky Linux 9 only (4 tests)
+./test-docker.sh --distro rockylinux:9 --all-modes
 ```
 
 ## Manual Testing Checklist
@@ -387,18 +450,48 @@ After making changes:
 
 ## Test Matrix
 
-Complete test coverage:
+### Default Behavior (Fast)
 
-| Distribution | Default | Minimal | Skip Components | With Bashhub |
-|-------------|---------|---------|-----------------|--------------|
-| Ubuntu 22.04 | ✓ | ✓ | ✓ | ✓ |
-| Debian 12 | ✓ | ✓ | ✓ | ✓ |
-| Fedora 39 | ✓ | ✓ | ✓ | ✓ |
-| Rocky 9 | ✓ | ✓ | ✓ | ✓ |
-| Arch | ✓ | ✓ | ✓ | ✓ |
+By default, tests run only `default` mode on selected distros:
 
-Run complete matrix:
+| Distribution | Tests Run |
+|-------------|-----------|
+| All (no filter) | 9 tests (9 distros × 1 mode) |
+| `--distro ubuntu` | 2 tests (ubuntu:22.04, 20.04 × 1 mode) |
+| `--distro ubuntu:22.04` | 1 test (1 distro × 1 mode) |
+
+### With --all-modes (Slow)
+
+Tests all 4 modes on selected distros:
+
+| Distribution | Tests Run |
+|-------------|-----------|
+| All with --all-modes | 36 tests (9 distros × 4 modes) |
+| `--distro ubuntu --all-modes` | 8 tests (2 ubuntu versions × 4 modes) |
+| `--distro rockylinux:9 --all-modes` | 4 tests (1 distro × 4 modes) |
+
+### Complete Coverage Matrix
+
+To test all combinations (36 total tests):
+
 ```bash
-./test-docker.sh  # Tests all combinations
+./test-docker.sh --all-modes  # 9 distros × 4 modes = 36 Docker builds!
+```
+
+**Estimated time:** 1-3 hours depending on network speed
+
+### Recommended Testing Strategy
+
+```bash
+# Quick smoke test (1-2 minutes per distro)
+./test-docker.sh --distro ubuntu:22.04
+./test-docker.sh --distro fedora:39
+./test-docker.sh --distro rockylinux:9
+
+# Or test all distros with default mode (10-20 minutes total)
+./test-docker.sh
+
+# Full test before release (1-3 hours)
+./test-docker.sh --all-modes
 ```
 
