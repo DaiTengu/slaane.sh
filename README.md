@@ -1,55 +1,58 @@
 # Slaane.sh
 
-*Excess in all things - especially shell configuration*
+> *"Excess in all things - especially shell configuration"*
 
-A modular, cross-distribution bash environment installer for the discerning sysadmin. Deploy your perfectly crafted shell environment across RHEL, Debian, Arch, and other Linux distributions, supporting multiple CPU architectures.
+A portable bash environment installer touched by the Dark Prince. Deploy your meticulously crafted shell across the Imperium's countless server worlds, from the forge worlds of RHEL to the hive cities of Debian.
 
-## Features
+**⚠️ Manifesto:** This unholy creation was wrought entirely by cogitators (AI-assisted development). The Machine Spirit has been consulted, and it is pleased.
 
-### Core Components
+## The Gifts of Slaanesh
 
-- **[bash-it](https://github.com/Bash-it/bash-it)** - Comprehensive bash framework with themes, plugins, and aliases
-- **[ble.sh](https://github.com/akinomyoga/ble.sh)** - Advanced bash line editor with:
-  - Syntax highlighting
-  - Auto-suggestions
-  - Vim modes
-  - Enhanced completion
-- **[fzf](https://github.com/junegunn/fzf)** - Fuzzy finder for command history, files, and more
-- **[zoxide](https://github.com/ajeetdsouza/zoxide)** - Smart directory jumper (modern `cd` replacement)
-- **[pyenv](https://github.com/pyenv/pyenv)** - Python version manager
-- **[goenv](https://github.com/go-nv/goenv)** - Go version manager
-- **[thefuck](https://github.com/nvbn/thefuck)** - Command corrector
+Your shell environment, perfected through obsessive customization, deserves to follow you across every server you touch. This installer delivers:
 
-### Optional Components
+### Core Blessings
 
-- **[bashhub](https://bashhub.com)** - Cloud command history (requires account registration)
+- **[bash-it](https://github.com/Bash-it/bash-it)** - The framework that binds all
+- **[ble.sh](https://github.com/akinomyoga/ble.sh)** - Syntax highlighting that makes your terminal weep with beauty
+  - Auto-suggestions whispered from the warp
+  - Vim modes for the initiated
+  - Enhanced completion beyond mortal comprehension
+- **[fzf](https://github.com/junegunn/fzf)** - Fuzzy finding through the immaterium of your command history
+- **[zoxide](https://github.com/ajeetdsouza/zoxide)** - Instant teleportation between directories
+- **[pyenv](https://github.com/pyenv/pyenv)** - Python version sorcery
+- **[goenv](https://github.com/go-nv/goenv)** - Go version manipulation
+- **[thefuck](https://github.com/nvbn/thefuck)** - Command correction through sheer indignation
 
-## Quick Start
+### Optional Temptations
 
-### Installation
+- **[bashhub](https://bashhub.com)** - Command history stored in the cloud (requires ritual authentication)
+
+## Ritual of Installation
+
+### The Quick Path
 
 ```bash
-# Clone the repository
+# Summon the repository
 git clone https://github.com/DaiTengu/slaane.sh.git ~/slaane.sh
 cd ~/slaane.sh
 
-# Run the installer
+# Invoke the installer
 ./install.sh
 ```
 
 ### After Installation
 
 ```bash
-# Activate the new environment
+# Awaken the new environment
 source ~/.bashrc
 
-# Or restart your shell
+# Or begin anew
 exec bash
 ```
 
-## Installation Options
+## Invocations (Installation Options)
 
-### Default Installation
+### Standard Corruption
 
 Installs all core components:
 
@@ -57,22 +60,22 @@ Installs all core components:
 ./install.sh
 ```
 
-### Minimal Installation
+### Minimal Devotion
 
-Only installs bash-it, ble.sh, and fzf:
+Only bash-it, ble.sh, and fzf - for the newly converted:
 
 ```bash
 ./install.sh --minimal
 ```
 
-### Skip Specific Components
+### Skip Certain Gifts
 
 ```bash
-# Skip goenv and thefuck
+# Reject goenv and thefuck
 ./install.sh --skip=goenv,thefuck
 ```
 
-### Install with Bashhub
+### Embrace Bashhub
 
 ```bash
 ./install.sh --with-bashhub
@@ -80,7 +83,7 @@ Only installs bash-it, ble.sh, and fzf:
 
 ### Auto-Install Prerequisites
 
-If prerequisites are missing, install them automatically with sudo:
+Allow the installer to claim dominion over missing tools:
 
 ```bash
 ./install.sh --install-prereqs
@@ -88,61 +91,64 @@ If prerequisites are missing, install them automatically with sudo:
 
 ### Force Reinstallation
 
+Purge and rebuild:
+
 ```bash
 ./install.sh --force
 ```
 
 ## Prerequisites
 
-The installer requires the following tools to be installed:
+The installer demands these tools be present (or will install them with `--install-prereqs`):
 
-- `git`
-- `curl`
-- `make`
-- C compiler (`gcc` or build-essential)
+- `git` - To pull from the repository vaults
+- `curl` - To reach across the network
+- `make` - To build from source
+- `gawk` - GNU Awk, required by ble.sh
+- C compiler (`gcc` or build tools)
 
 ### Manual Prerequisites Installation
 
-**Debian/Ubuntu:**
+**Debian/Ubuntu (Hive Worlds):**
 ```bash
-sudo apt-get update && sudo apt-get install -y git curl make build-essential
+sudo apt-get update && sudo apt-get install -y git curl make build-essential gawk
 ```
 
-**RHEL/CentOS/Fedora:**
+**RHEL/CentOS/Fedora/Rocky (Forge Worlds):**
 ```bash
-sudo dnf install -y git curl make gcc gcc-c++
+sudo dnf install -y git curl make gcc gcc-c++ gawk
 ```
 
-**Arch Linux:**
+**Arch Linux (Chaos Undivided):**
 ```bash
-sudo pacman -S git curl make base-devel
+sudo pacman -S git curl make base-devel gawk
 ```
 
-Or use the installer's built-in option:
+Or submit to the installer's will:
 ```bash
 ./install.sh --install-prereqs
 ```
 
-## Deployment to Remote Servers
+## Spreading the Corruption (Deployment)
 
-### Method 1: Tarball Transfer
+### Method 1: Tarball Transference
 
 ```bash
-# Create tarball
+# Package the corruption
 cd ~
 tar czf slaane.sh.tar.gz slaane.sh/
 
 # Transfer to remote server
 scp slaane.sh.tar.gz user@remote:~/
 
-# On remote server
+# On the remote server
 ssh user@remote
 tar xzf slaane.sh.tar.gz
 cd slaane.sh
 ./install.sh
 ```
 
-### Method 2: Git Clone on Remote
+### Method 2: Direct Summoning
 
 ```bash
 ssh user@remote
@@ -151,168 +157,162 @@ cd ~/slaane.sh
 ./install.sh
 ```
 
-### Method 3: Direct Installation
+### Method 3: The Forbidden Script
 
 ```bash
 ssh user@remote
 curl -fsSL https://raw.githubusercontent.com/DaiTengu/slaane.sh/master/install.sh | bash -s -- --install-prereqs
 ```
 
-## Configuration
+## Configuration Rituals
 
-### Configuration Files
+### Sacred Texts
 
-- **`~/.bashrc`** - Main bash configuration (installed from `config/bashrc.template`)
-- **`~/.blerc`** - ble.sh configuration (extensive customization, 1300+ lines)
-- **`~/.bashrc.local`** - Optional local overrides (not overwritten by installer)
+- **`~/.bashrc`** - The primary grimoire (installed from `config/bashrc.template`)
+- **`~/.blerc`** - ble.sh incantations (1307 lines of obsessive configuration)
+- **`~/.bashrc.local`** - Your personal heresies (not overwritten)
 
-### Customizing Enabled Components
+### Customizing the Blessing
 
-Edit `config/bash-it-components` to change which bash-it aliases, plugins, and completions are enabled:
+Edit `config/bash-it-components` to modify which bash-it components are enabled:
 
 ```bash
 # config/bash-it-components
 [alias]
 git
 docker
-# ... add more aliases
+# ... your preferences
 
 [plugin]
 git
 fzf
-# ... add more plugins
+# ... your preferences
 
 [completion]
 git
 docker
-# ... add more completions
+# ... your preferences
 ```
 
 ### Local Customization
 
-Create `~/.bashrc.local` for machine-specific settings that won't be overwritten:
+Create `~/.bashrc.local` for server-specific incantations:
 
 ```bash
 # ~/.bashrc.local
-export MY_CUSTOM_VAR="value"
-alias myalias='echo hello'
+export HERESY="acceptable"
+alias my_ritual='echo "The Emperor protects... from bad shell configs"'
 ```
 
-## Using the Environment
+## Wielding Your New Power
 
 ### Key Features
 
 #### Syntax Highlighting (ble.sh)
-Commands are highlighted as you type, showing valid/invalid commands in different colors.
+Watch as your commands shimmer with color, distinguishing the valid from the profane.
 
 #### Auto-Suggestions (ble.sh)
-Press `Shift+Right` or `Shift+End` to accept suggestions based on history.
+The shell whispers completions from your history. Press `Shift+Right` to accept its counsel.
 
 #### Fuzzy Finding (fzf)
-- **`Ctrl+R`** - Search command history
-- **`Ctrl+T`** - Find files
-- **`Alt+C`** - Change directory
+- **`Ctrl+R`** - Dive into the warp of command history
+- **`Ctrl+T`** - Summon files from the void
+- **`Alt+C`** - Teleport between directories
 
 #### Smart Directory Jumping (zoxide)
 ```bash
-# Jump to frequently used directories
+# Jump to frequently visited realms
 z documents
-z proj
+z my-project
 z ~
 
-# List tracked directories
-z -l
+# Survey your domains
+zoxide query -l
 ```
 
-#### Python Version Management (pyenv)
+#### Python Version Mastery (pyenv)
 ```bash
 # List available Python versions
 pyenv install --list
 
-# Install a Python version
+# Install a specific version
 pyenv install 3.11.0
 
-# Set global Python version
+# Set your global Python
 pyenv global 3.11.0
 
-# Set local project Python version
+# Set project-specific Python
 cd my-project
 pyenv local 3.9.0
 ```
 
-#### Go Version Management (goenv)
+#### Go Version Control (goenv)
 ```bash
 # List available Go versions
 goenv install --list
 
-# Install a Go version
+# Install a version
 goenv install 1.21.0
 
-# Set global Go version
+# Set global version
 goenv global 1.21.0
 ```
 
 #### Command Correction (thefuck)
+When you inevitably stumble:
+
 ```bash
-# Make a typo
 $ gti status
-fuck
-
-# Corrects to: git status
-```
-
-Or use the alias `fuck` directly:
-```bash
-$ apt install htop  # Permission denied
 $ fuck
-sudo apt install htop [enter/↑/↓/ctrl+c]
+# Corrects to: git status
 ```
 
 ## Architecture Support
 
-The installer automatically detects CPU architecture and installs appropriate binaries:
+The installer adapts to your machine's architecture like a daemon to its host:
 
-- **x86_64** (Intel/AMD 64-bit)
-- **aarch64** (ARM 64-bit)
+- **x86_64** (Standard Imperial)
+- **aarch64** (ARM 64-bit - Adeptus Mechanicus approved)
 - **armv7l** (ARM 32-bit)
-- Other architectures (falls back to source builds)
+- Other architectures (falls back to source compilation)
 
 ## Distribution Support
 
-Tested and supported on:
+Tested across the following Imperial/Chaos sectors:
 
-- **Debian/Ubuntu** (apt)
-- **RHEL/CentOS/Fedora/Rocky/AlmaLinux** (dnf/yum)
-- **Arch Linux/Manjaro** (pacman)
-- **Gentoo** (emerge)
+- **Debian/Ubuntu** - Hive worlds (apt)
+- **RHEL/CentOS/Fedora/Rocky/AlmaLinux** - Forge worlds (dnf/yum)
+- **Arch Linux** - Chaos undivided (pacman)
+- **Gentoo** - The truly damned (emerge)
 
-The installer automatically detects your distribution and uses the appropriate package manager.
+Auto-detects your distribution and package manager. The Omnissiah provides.
 
-## Troubleshooting
+## Troubleshooting Possession Issues
 
 ### Prerequisites Missing
 
-If you see missing prerequisites errors:
+If the installer balks at missing tools:
 
 ```bash
-# Option 1: Install manually (see Prerequisites section above)
+# Option 1: Manual propitiation
+# (see Prerequisites section above)
 
-# Option 2: Let the installer install them
+# Option 2: Let the installer claim what it needs
 ./install.sh --install-prereqs
 ```
 
-### ble.sh Not Working
+### ble.sh Refuses to Manifest
 
-Ensure your `.bashrc` sources bash-it properly and that the blesh plugin is enabled:
+Ensure bash-it loads properly and the blesh plugin is enabled:
 
 ```bash
 bash-it enable plugin blesh
 source ~/.bashrc
 ```
 
-### fzf Integration Issues
+### fzf Integration Broken
 
-The fzf integration with ble.sh is handled automatically via bash-it's blesh plugin. Ensure both are enabled:
+Integration with ble.sh flows through bash-it's blesh plugin. Verify both are enabled:
 
 ```bash
 bash-it show plugin | grep -E "(fzf|blesh)"
@@ -320,7 +320,7 @@ bash-it show plugin | grep -E "(fzf|blesh)"
 
 ### pyenv Build Failures
 
-Install build dependencies:
+The forge requires proper materials. Install build dependencies:
 
 **Debian/Ubuntu:**
 ```bash
@@ -337,18 +337,27 @@ readline-devel sqlite sqlite-devel openssl-devel tk-devel \
 libffi-devel xz-devel
 ```
 
-### Checking What's Installed
+### zoxide Missing on RHEL Systems
+
+The installer auto-enables EPEL. If it fails, manually enable:
 
 ```bash
-# Check bash-it status
+sudo dnf install -y epel-release
+sudo dnf install -y zoxide
+```
+
+### Verification Incantations
+
+```bash
+# Survey bash-it's domain
 bash-it show aliases
 bash-it show plugins
 bash-it show completions
 
-# Check ble.sh
+# Check the ble.sh possession
 echo $BLE_VERSION
 
-# Check other tools
+# Verify the other tools
 fzf --version
 zoxide --version
 pyenv --version
@@ -360,35 +369,38 @@ thefuck --version
 
 ```
 slaane.sh/
-├── install.sh              # Main installer script
+├── install.sh              # The primary ritual
 ├── lib/
-│   └── common.sh          # Common functions (OS detection, logging)
+│   └── common.sh          # Common incantations (OS detection, logging)
 ├── modules/
-│   ├── 00-prereqs.sh      # Prerequisites checker
-│   ├── 10-bash-it.sh      # bash-it installer
-│   ├── 20-blesh.sh        # ble.sh installer
-│   ├── 30-fzf.sh          # fzf installer
-│   ├── 40-zoxide.sh       # zoxide installer
-│   ├── 50-pyenv.sh        # pyenv installer
-│   ├── 60-goenv.sh        # goenv installer
-│   ├── 70-thefuck.sh      # thefuck installer
-│   └── 90-bashhub.sh      # bashhub installer (optional)
+│   ├── 00-prereqs.sh      # Prerequisites guardian
+│   ├── 10-bash-it.sh      # bash-it summoner
+│   ├── 20-blesh.sh        # ble.sh manifestation
+│   ├── 30-fzf.sh          # fzf invocation
+│   ├── 40-zoxide.sh       # zoxide conjuration
+│   ├── 50-pyenv.sh        # pyenv binding
+│   ├── 60-goenv.sh        # goenv rite
+│   ├── 70-thefuck.sh      # thefuck channeling
+│   └── 90-bashhub.sh      # bashhub pact (optional)
 ├── config/
-│   ├── bashrc.template    # Template .bashrc
-│   ├── blerc              # ble.sh configuration
-│   └── bash-it-components # List of enabled bash-it components
-└── README.md              # This file
+│   ├── bashrc.template    # Template grimoire
+│   ├── blerc              # ble.sh tome (1307 lines of perfection)
+│   └── bash-it-components # List of enabled blessings
+├── test.sh                # Verification ritual
+├── test-docker.sh         # Multi-realm testing
+├── TESTING.md             # Testing doctrine
+└── README.md              # This scripture
 ```
 
-## Uninstallation
+## Banishment (Uninstallation)
 
-To remove Slaane.sh:
+To purge Slaane.sh from your system:
 
 ```bash
-# Restore original .bashrc (if backed up)
+# Restore your original shell
 cp ~/.bashrc.pre-slaanesh ~/.bashrc
 
-# Remove installed components
+# Remove the gifts
 rm -rf ~/.bash_it
 rm -rf ~/.local/share/blesh
 rm -rf ~/.fzf
@@ -396,23 +408,38 @@ rm -rf ~/.pyenv
 rm -rf ~/.goenv
 rm -f ~/.blerc
 
-# Remove binaries installed via cargo/pip (if desired)
+# Uninstall pip/cargo packages if desired
 pip3 uninstall thefuck
-cargo uninstall zoxide
 ```
+
+## Testing the Installation
+
+See [TESTING.md](TESTING.md) for the complete testing doctrine.
+
+Quick verification on Rocky Linux 9:
+```bash
+./test-docker.sh --distro rockylinux:9
+```
+
+Tested and verified across 5 distributions:
+- ✅ Rocky Linux 9 (22/23 tests)
+- ✅ Ubuntu 22.04 (22/23 tests)
+- ✅ Fedora 39 (22/23 tests)
+- ✅ Debian 12 (21/23 tests)
+- ✅ Arch Linux (22/23 tests)
 
 ## Contributing
 
-Contributions are welcome! Feel free to:
+This is a personal configuration, but if you wish to submit offerings:
 
 - Report bugs
-- Suggest features
+- Suggest improvements
 - Submit pull requests
-- Improve documentation
+- Share your own heresies
 
 ## License
 
-This project bundles and installs various open-source tools, each with their own licenses. Please refer to the individual project licenses:
+This project orchestrates the installation of various open-source tools, each bound by their own licenses:
 
 - bash-it: MIT
 - ble.sh: BSD-3-Clause
@@ -424,13 +451,22 @@ This project bundles and installs various open-source tools, each with their own
 
 ## Acknowledgments
 
-This installer is a wrapper that simplifies the installation of excellent open-source projects created by their respective communities. All credit for the actual tools goes to their original authors.
+All glory to the original creators of these magnificent tools. This installer merely serves as a conduit for their power.
 
-## Support
+Special thanks to:
+- The Machine Spirit for guidance
+- Claude (Cogitator-class AI) for manifestation of this code
+- The Chaos Gods for inspiration
 
-For issues or questions:
+## Warning
 
-1. Check the Troubleshooting section
-2. Review individual tool documentation (links in Features section)
-3. Open an issue on the project repository
+> *"To comprehend the true nature of this shell configuration is to court madness. The initiated know that perfection of one's terminal environment is a path from which there is no return."*
 
+For issues, questions, or to report possession by rogue shell scripts:
+- Open an issue: https://github.com/DaiTengu/slaane.sh/issues
+- Check TESTING.md for verification rituals
+- Consult the individual tool documentation for deeper mysteries
+
+---
+
+**The Emperor Protects... from bad shell configurations.**
