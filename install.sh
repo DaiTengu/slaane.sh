@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Portable Bash Environment Installer
+# Slaane.sh - Excess in all things, especially shell configuration
 # Installs bash-it, ble.sh, fzf, and other development tools
 
 set -e  # Exit on error
@@ -50,7 +50,7 @@ MINIMAL_MODULES=(
 
 show_usage() {
     cat <<EOF
-Portable Bash Environment Installer
+Slaane.sh - Personal Bash Environment Installer
 
 Usage: $0 [OPTIONS]
 
@@ -186,7 +186,7 @@ install_configuration_files() {
     
     local bashrc_template="$SCRIPT_DIR/config/bashrc.template"
     local blerc_file="$SCRIPT_DIR/config/blerc"
-    local backup_suffix=".pre-portable-bash-env"
+    local backup_suffix=".pre-slaanesh"
     
     # Install .bashrc
     if [[ -f "$bashrc_template" ]]; then
@@ -268,7 +268,7 @@ main() {
     # Print banner
     cat <<EOF
 ========================================
-Portable Bash Environment Installer
+Slaane.sh installer
 ========================================
 
 This installer will set up:

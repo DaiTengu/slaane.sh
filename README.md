@@ -1,6 +1,8 @@
-# Portable Bash Environment
+# Slaane.sh
 
-A modular, cross-distribution bash environment installer that works seamlessly across RHEL, Debian, Arch, and other Linux distributions, supporting multiple CPU architectures.
+*Excess in all things - especially shell configuration*
+
+A modular, cross-distribution bash environment installer for the discerning sysadmin. Deploy your perfectly crafted shell environment across RHEL, Debian, Arch, and other Linux distributions, supporting multiple CPU architectures.
 
 ## Features
 
@@ -28,8 +30,8 @@ A modular, cross-distribution bash environment installer that works seamlessly a
 
 ```bash
 # Clone the repository
-git clone <your-repo-url> ~/portable-bash-env
-cd ~/portable-bash-env
+git clone https://github.com/DaiTengu/slaane.sh.git ~/slaane.sh
+cd ~/slaane.sh
 
 # Run the installer
 ./install.sh
@@ -128,15 +130,15 @@ Or use the installer's built-in option:
 ```bash
 # Create tarball
 cd ~
-tar czf portable-bash-env.tar.gz portable-bash-env/
+tar czf slaane.sh.tar.gz slaane.sh/
 
 # Transfer to remote server
-scp portable-bash-env.tar.gz user@remote:~/
+scp slaane.sh.tar.gz user@remote:~/
 
 # On remote server
 ssh user@remote
-tar xzf portable-bash-env.tar.gz
-cd portable-bash-env
+tar xzf slaane.sh.tar.gz
+cd slaane.sh
 ./install.sh
 ```
 
@@ -144,16 +146,16 @@ cd portable-bash-env
 
 ```bash
 ssh user@remote
-git clone <your-repo-url> ~/portable-bash-env
-cd ~/portable-bash-env
+git clone https://github.com/DaiTengu/slaane.sh.git ~/slaane.sh
+cd ~/slaane.sh
 ./install.sh
 ```
 
-### Method 3: Direct Installation (if hosted publicly)
+### Method 3: Direct Installation
 
 ```bash
 ssh user@remote
-curl -fsSL <raw-url>/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/DaiTengu/slaane.sh/master/install.sh | bash -s -- --install-prereqs
 ```
 
 ## Configuration
@@ -357,7 +359,7 @@ thefuck --version
 ## Project Structure
 
 ```
-portable-bash-env/
+slaane.sh/
 ├── install.sh              # Main installer script
 ├── lib/
 │   └── common.sh          # Common functions (OS detection, logging)
@@ -380,11 +382,11 @@ portable-bash-env/
 
 ## Uninstallation
 
-To remove the portable bash environment:
+To remove Slaane.sh:
 
 ```bash
 # Restore original .bashrc (if backed up)
-cp ~/.bashrc.pre-portable-bash-env ~/.bashrc
+cp ~/.bashrc.pre-slaanesh ~/.bashrc
 
 # Remove installed components
 rm -rf ~/.bash_it

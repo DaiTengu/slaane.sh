@@ -97,7 +97,7 @@ test_bash_it_component() {
 
 run_tests() {
     echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}Testing Portable Bash Environment${NC}"
+    echo -e "${BLUE}Testing Slaane.sh${NC}"
     echo -e "${BLUE}========================================${NC}"
     echo ""
     

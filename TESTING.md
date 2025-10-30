@@ -1,6 +1,6 @@
 # Testing Guide
 
-This document describes how to test the Portable Bash Environment installer.
+This document describes how to test the Slaane.sh installer.
 
 ## Quick Testing
 

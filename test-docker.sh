@@ -44,7 +44,7 @@ ALL_MODES=false
 
 show_usage() {
     cat <<EOF
-Docker-based testing for Portable Bash Environment
+Docker-based testing for Slaane.sh
 
 Usage: $0 [OPTIONS]
 
