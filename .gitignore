@@ -1,0 +1,16 @@
+# Editor files
+*.swp
+*.swo
+*~
+.*.sw?
+.DS_Store
+
+# Testing artifacts
+test/
+*.test
+*.log
+
+# Backup files
+*.bak
+*.backup
+

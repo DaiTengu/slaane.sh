@@ -1,0 +1,68 @@
+# bash-it components configuration
+# This file specifies which aliases, plugins, and completions to enable
+# Format: one component name per line under the appropriate section
+
+# Aliases to enable
+[alias]
+ansible
+bash-it
+docker
+fuck
+general
+git
+tmux
+todo.txt-cli
+uuidgen
+vagrant
+vim
+
+# Plugins to enable
+[plugin]
+base
+blesh
+browser
+colors
+explain
+git
+gitstatus
+man
+projects
+python
+ssh
+sshagent
+sudo
+thefuck
+tmux
+tmuxinator
+todo
+virtualenv
+zoxide
+goenv
+pyenv
+go
+fzf
+
+# Completions to enable
+[completion]
+system
+awscli
+bash-it
+consul
+defaults
+dirs
+docker-compose
+docker
+git
+github-cli
+go
+helm
+makefile
+minikube
+pip
+pip3
+pipenv
+terraform
+tmux
+vagrant
+aliases
+
