@@ -26,17 +26,21 @@ DISTRIBUTIONS=(
     "archlinux:latest"
 )
 
-INSTALL_MODES=(
+ALL_INSTALL_MODES=(
     "default"
     "minimal"
     "skip-goenv"
     "with-bashhub"
 )
 
+# Default to only testing "default" mode unless --all-modes or --mode specified
+DEFAULT_MODE="default"
+
 # Parse arguments
 DISTRO_FILTER=""
 MODE_FILTER=""
 INTERACTIVE=false
+ALL_MODES=false
 
 show_usage() {
     cat <<EOF
@@ -48,6 +52,7 @@ Options:
     -h, --help              Show this help message
     -d, --distro PATTERN    Test only distributions matching pattern
     -m, --mode MODE         Test only specific installation mode
+    -a, --all-modes         Test all installation modes (default tests only 'default' mode)
     -i, --interactive       Run interactive shell in test container
     -l, --list              List available distributions and modes
 
@@ -58,11 +63,17 @@ Modes:
     with-bashhub  - Include bashhub installation
 
 Examples:
-    # Test on all distributions with default mode
+    # Test all distributions with default mode
     $0
 
-    # Test only Ubuntu distributions
+    # Test all distributions with all modes (slow!)
+    $0 --all-modes
+
+    # Test only Ubuntu with default mode
     $0 --distro ubuntu
+
+    # Test Ubuntu with all installation modes
+    $0 --distro ubuntu --all-modes
 
     # Test minimal installation on Fedora
     $0 --distro fedora --mode minimal
@@ -83,9 +94,12 @@ list_options() {
     done
     echo ""
     echo "Available modes:"
-    for mode in "${INSTALL_MODES[@]}"; do
+    for mode in "${ALL_INSTALL_MODES[@]}"; do
         echo "  - $mode"
     done
+    echo ""
+    echo "Note: By default, only 'default' mode is tested."
+    echo "      Use --all-modes to test all modes, or --mode to specify one."
 }
 
 parse_args() {
@@ -106,6 +120,10 @@ parse_args() {
             -m|--mode)
                 MODE_FILTER="$2"
                 shift 2
+                ;;
+            -a|--all-modes)
+                ALL_MODES=true
+                shift
                 ;;
             -i|--interactive)
                 INTERACTIVE=true
@@ -199,7 +217,11 @@ run_test() {
     
     # Build image
     echo -e "${YELLOW}Building Docker image...${NC}"
-    if ! docker build -f "$SCRIPT_DIR/.test-dockerfile" -t "$tag" "$SCRIPT_DIR"; then
+    local build_args=""
+    if [[ "${NO_CACHE:-}" == "true" ]]; then
+        build_args="--no-cache"
+    fi
+    if ! docker build $build_args -f "$SCRIPT_DIR/.test-dockerfile" -t "$tag" "$SCRIPT_DIR"; then
         echo -e "${RED}✗ Build failed for $distro ($mode)${NC}"
         return 1
     fi
@@ -238,20 +260,36 @@ main() {
     
     # Filter modes
     local modes_to_test=()
-    for mode in "${INSTALL_MODES[@]}"; do
-        if [[ -z "$MODE_FILTER" ]] || [[ "$mode" == "$MODE_FILTER" ]]; then
-            modes_to_test+=("$mode")
-        fi
-    done
+    if [[ -n "$MODE_FILTER" ]]; then
+        # User specified a specific mode
+        modes_to_test+=("$MODE_FILTER")
+    elif [[ "$ALL_MODES" == "true" ]]; then
+        # User wants all modes
+        modes_to_test=("${ALL_INSTALL_MODES[@]}")
+    else
+        # Default: only test "default" mode
+        modes_to_test+=("$DEFAULT_MODE")
+    fi
     
     if [[ ${#distros_to_test[@]} -eq 0 ]]; then
         echo -e "${RED}No distributions match filter: $DISTRO_FILTER${NC}"
         exit 1
     fi
     
-    if [[ ${#modes_to_test[@]} -eq 0 ]]; then
-        echo -e "${RED}No modes match filter: $MODE_FILTER${NC}"
-        exit 1
+    # Validate mode filter if specified
+    if [[ -n "$MODE_FILTER" ]]; then
+        local valid_mode=false
+        for mode in "${ALL_INSTALL_MODES[@]}"; do
+            if [[ "$MODE_FILTER" == "$mode" ]]; then
+                valid_mode=true
+                break
+            fi
+        done
+        if [[ "$valid_mode" == "false" ]]; then
+            echo -e "${RED}Invalid mode: $MODE_FILTER${NC}"
+            echo "Valid modes: ${ALL_INSTALL_MODES[*]}"
+            exit 1
+        fi
     fi
     
     echo -e "${BLUE}========================================${NC}"
@@ -268,11 +306,11 @@ main() {
     # Run tests
     for distro in "${distros_to_test[@]}"; do
         for mode in "${modes_to_test[@]}"; do
-            ((total++))
+            total=$((total + 1))
             if run_test "$distro" "$mode"; then
-                ((passed++))
+                passed=$((passed + 1))
             else
-                ((failed++))
+                failed=$((failed + 1))
             fi
             echo ""
         done
