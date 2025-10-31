@@ -4,8 +4,60 @@
 
 set -e  # Exit on error
 
-# Script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Bootstrap: If running from pipe (curl | bash), download repo first
+# Try to determine script directory - if it fails, we're likely being piped
+SCRIPT_DIR=""
+if [[ -n "${BASH_SOURCE[0]}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" 2>/dev/null || true
+fi
+
+# If we couldn't determine a valid script directory, we're being piped
+if [[ -z "$SCRIPT_DIR" ]] || [[ ! -f "$SCRIPT_DIR/lib/common.sh" ]]; then
+    # We're being piped to bash or sourced, need to download the repo
+    TEMP_DIR=$(mktemp -d -t slaane.sh.XXXXXX)
+    trap "rm -rf '$TEMP_DIR'" EXIT
+    
+    REPO_URL="https://github.com/DaiTengu/slaane.sh/archive/refs/heads/master.tar.gz"
+    
+    # Check if curl or wget is available
+    if command -v curl >/dev/null 2>&1; then
+        DOWNLOAD_CMD="curl -fsSL"
+    elif command -v wget >/dev/null 2>&1; then
+        DOWNLOAD_CMD="wget -qO-"
+    else
+        echo "ERROR: curl or wget is required to download the repository."
+        echo ""
+        echo "Please either:"
+        echo "  1. Install curl or wget first, then run this command again"
+        echo "  2. Clone the repository manually:"
+        echo "     git clone https://github.com/DaiTengu/slaane.sh.git ~/slaane.sh"
+        echo "     cd ~/slaane.sh && ./install.sh --install-prereqs"
+        echo ""
+        exit 1
+    fi
+    
+    # Check if tar is available
+    if ! command -v tar >/dev/null 2>&1; then
+        echo "ERROR: tar is required to extract the repository."
+        echo ""
+        echo "Please install tar, then run this command again."
+        exit 1
+    fi
+    
+    echo "Downloading Slaane.sh repository..."
+    if ! (cd "$TEMP_DIR" && $DOWNLOAD_CMD "$REPO_URL" | tar -xzf - 2>/dev/null); then
+        echo "ERROR: Failed to download or extract repository."
+        exit 1
+    fi
+    
+    # Re-execute the actual install script with original arguments
+    exec bash "$TEMP_DIR/slaane.sh-master/install.sh" "$@"
+fi
+
+# Normal execution path - set script directory if not already set
+if [[ -z "$SCRIPT_DIR" ]]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 
 # Source common functions
 source "$SCRIPT_DIR/lib/common.sh"
