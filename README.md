@@ -412,8 +412,17 @@ slaane.sh/
 ├── test.sh                # Verification ritual
 ├── test-docker.sh         # Multi-realm testing
 ├── TESTING.md             # Testing doctrine
+├── CHANGELOG.md           # Annals of corruption
+├── TODO.md                # The unfinished grimoire
 └── README.md              # This scripture
 ```
+
+## Additional Scriptures
+
+For those who seek deeper knowledge of this unholy creation:
+
+- **[CHANGELOG.md](CHANGELOG.md)** - The annals of corruption, documenting all changes as the project evolves through the warp
+- **[TODO.md](TODO.md)** - The unfinished grimoire, cataloging future enhancements and banishment rites yet to be perfected
 
 ## Banishment (Uninstallation)
 
