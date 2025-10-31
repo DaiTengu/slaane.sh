@@ -194,6 +194,8 @@ docker
 # ... your preferences
 ```
 
+**Heretical Modification:** The installer corrupts bash-it's default `liquidprompt.theme.bash`, replacing it with a corrected version that properly manifests git branch names in the prompt. The original theme's `_lp_git_branch()` function failed to bind the branch variable, leaving only status symbols visible to the uninitiated.
+
 ### Local Customization
 
 Create `~/.bashrc.local` for server-specific incantations:
@@ -383,9 +385,10 @@ slaane.sh/
 │   ├── 70-thefuck.sh      # thefuck channeling
 │   └── 90-bashhub.sh      # bashhub pact (optional)
 ├── config/
-│   ├── bashrc.template    # Template grimoire
-│   ├── blerc              # ble.sh tome (1307 lines of perfection)
-│   └── bash-it-components # List of enabled blessings
+│   ├── bashrc.template        # Template grimoire
+│   ├── blerc                  # ble.sh tome (1307 lines of perfection)
+│   ├── bash-it-components     # List of enabled blessings
+│   └── liquidprompt.theme.bash # Corrupted liquidprompt theme (replaces broken default)
 ├── test.sh                # Verification ritual
 ├── test-docker.sh         # Multi-realm testing
 ├── TESTING.md             # Testing doctrine
@@ -469,4 +472,4 @@ For issues, questions, or to report possession by rogue shell scripts:
 
 ---
 
-**The Emporer Protects… but Slaane.sh Perfects.**
+**The Emperor Protects… but Slaane.sh Perfects.**
