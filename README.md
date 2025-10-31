@@ -22,6 +22,7 @@ Your shell environment, perfected through obsessive customization, deserves to f
 - **[pyenv](https://github.com/pyenv/pyenv)** - Python version sorcery
 - **[goenv](https://github.com/go-nv/goenv)** - Go version manipulation
 - **[thefuck](https://github.com/nvbn/thefuck)** - Command correction through sheer indignation
+- **[nano-syntax-highlighting](https://github.com/galenguyer/nano-syntax-highlighting)** - Syntax highlighting for the nano editor (for those who embrace heresy over vim)
 
 ### Optional Temptations
 
@@ -269,6 +270,21 @@ $ fuck
 # Corrects to: git status
 ```
 
+#### Nano Syntax Highlighting
+For the heretics who prefer nano over vim, syntax highlighting is automatically installed:
+
+```bash
+# Open any file and witness syntax highlighting
+nano script.sh
+nano config.yaml
+nano Dockerfile
+
+# The highlighting works automatically - no configuration needed
+# Files are installed to ~/.nano/
+```
+
+**Note:** If nano is not installed, the syntax files are still installed and will activate once nano is installed. Use `--install-prereqs` to automatically install nano during setup.
+
 ## Architecture Support
 
 The installer adapts to your machine's architecture like a daemon to its host:
@@ -365,6 +381,9 @@ zoxide --version
 pyenv --version
 goenv --version
 thefuck --version
+
+# Check nano syntax highlighting (for the heretics)
+ls ~/.nano/*.nanorc 2>/dev/null | wc -l  # Count of syntax files
 ```
 
 ## Project Structure
@@ -383,6 +402,7 @@ slaane.sh/
 │   ├── 50-pyenv.sh        # pyenv binding
 │   ├── 60-goenv.sh        # goenv rite
 │   ├── 70-thefuck.sh      # thefuck channeling
+│   ├── 80-nano.sh         # nano syntax highlighting (for heretics)
 │   └── 90-bashhub.sh      # bashhub pact (optional)
 ├── config/
 │   ├── bashrc.template        # Template grimoire

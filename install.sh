@@ -82,6 +82,7 @@ CORE_MODULES=(
     "50-pyenv"
     "60-goenv"
     "70-thefuck"
+    "80-nano"
 )
 
 # Optional modules (only installed with flags)
@@ -139,6 +140,7 @@ Modules:
         pyenv       - Python version manager
         goenv       - Go version manager
         thefuck     - Command corrector
+        nano        - Nano syntax highlighting
 
     Optional modules:
         bashhub     - Cloud command history (requires account)
@@ -293,6 +295,7 @@ $(if command -v zoxide &>/dev/null; then echo "  ✓ zoxide"; fi)
 $(if [[ -d "$HOME/.pyenv" ]]; then echo "  ✓ pyenv"; fi)
 $(if [[ -d "$HOME/.goenv" ]]; then echo "  ✓ goenv"; fi)
 $(if command -v thefuck &>/dev/null; then echo "  ✓ thefuck"; fi)
+$(if [[ -d "$HOME/.nano" ]] && [[ -n "$(ls -A "$HOME/.nano"/*.nanorc 2>/dev/null)" ]]; then echo "  ✓ nano syntax highlighting"; fi)
 $(if [[ -f "$HOME/.bashhub/bashhub.sh" ]]; then echo "  ✓ bashhub"; fi)
 
 ${YELLOW}Next Steps:${NC}

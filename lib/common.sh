@@ -161,7 +161,7 @@ get_package_names() {
                     ;;
             esac
             ;;
-        git|curl|make|wget|gawk)
+        git|curl|make|wget|gawk|nano|unzip|zip)
             packages="$tool"
             ;;
         python3-pip)

@@ -167,6 +167,22 @@ run_tests() {
     test_command_exists "thefuck" "thefuck command" || true
     echo ""
     
+    # Test nano syntax highlighting
+    echo -e "${YELLOW}Testing nano syntax highlighting...${NC}"
+    test_dir_exists "$HOME/.nano" "nano syntax directory" || true
+    if [[ -d "$HOME/.nano" ]]; then
+        local nanorc_count=$(find "$HOME/.nano" -name "*.nanorc" 2>/dev/null | wc -l)
+        if [[ $nanorc_count -gt 0 ]]; then
+            echo -e "${GREEN}✓${NC} nano syntax files: $nanorc_count files found"
+            TESTS_PASSED=$((TESTS_PASSED + 1))
+        else
+            echo -e "${YELLOW}⚠${NC} nano syntax directory exists but no .nanorc files found"
+            TESTS_FAILED=$((TESTS_FAILED + 1))
+        fi
+    fi
+    # Note: nano itself is optional, so we don't test for it
+    echo ""
+    
     # Test configuration files
     echo -e "${YELLOW}Testing configuration files...${NC}"
     test_file_exists "$HOME/.bashrc" ".bashrc exists" || true
