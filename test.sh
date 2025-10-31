@@ -80,9 +80,28 @@ test_bash_it_component() {
     local type="$1"  # alias, plugin, or completion
     local name="$2"
     
+    # Determine file extension (aliases uses plural, plugin/completion use singular)
+    local file_ext=""
+    case "$type" in
+        alias)
+            file_ext="aliases"
+            ;;
+        plugin)
+            file_ext="plugin"
+            ;;
+        completion)
+            file_ext="completion"
+            ;;
+        *)
+            echo -e "${RED}✗${NC} bash-it $type NOT enabled: $name (unknown type)"
+            TESTS_FAILED=$((TESTS_FAILED + 1))
+            return 1
+            ;;
+    esac
+    
     local enabled_dir="$HOME/.bash_it/enabled"
     
-    if ls "$enabled_dir"/*"---${name}.${type}.bash" &>/dev/null; then
+    if ls "$enabled_dir"/*"---${name}.${file_ext}.bash" &>/dev/null; then
         echo -e "${GREEN}✓${NC} bash-it $type enabled: $name"
         TEST_RESULTS+=("PASS: bash-it $type $name")
         TESTS_PASSED=$((TESTS_PASSED + 1))

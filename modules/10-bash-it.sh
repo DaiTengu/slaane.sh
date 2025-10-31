@@ -53,16 +53,48 @@ enable_bash_it_component() {
         return 1
     fi
     
+    # Determine directory name (completion is singular, aliases/plugins are plural)
+    local dir_name=""
+    case "$component_type" in
+        alias)
+            dir_name="aliases"
+            ;;
+        plugin)
+            dir_name="plugins"
+            ;;
+        completion)
+            dir_name="completion"
+            ;;
+        *)
+            log_error "Unknown component type: $component_type"
+            return 1
+            ;;
+    esac
+    
+    # Determine file extension (aliases uses plural, plugin/completion use singular)
+    local file_ext=""
+    case "$component_type" in
+        alias)
+            file_ext="aliases"
+            ;;
+        plugin)
+            file_ext="plugin"
+            ;;
+        completion)
+            file_ext="completion"
+            ;;
+    esac
+    
     # Check if component exists
-    local available_file="$BASH_IT_DIR/${component_type}s/available/${component_name}.${component_type}.bash"
+    local available_file="$BASH_IT_DIR/$dir_name/available/${component_name}.${file_ext}.bash"
     if [[ ! -f "$available_file" ]]; then
         log_warning "Component not found: ${component_type}/${component_name}"
         return 1
     fi
     
-    # Check if already enabled
+    # Check if already enabled (enabled files have pattern: priority---name.extension.bash)
     local enabled_dir="$BASH_IT_DIR/enabled"
-    if ls "$enabled_dir"/*"---${component_name}.${component_type}.bash" &>/dev/null; then
+    if ls "$enabled_dir"/*"---${component_name}.${file_ext}.bash" &>/dev/null; then
         log_info "Component already enabled: ${component_type}/${component_name}"
         return 0
     fi

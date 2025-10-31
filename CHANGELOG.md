@@ -12,10 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - **Liquidprompt git branch display**: Corrupted bash-it's default `liquidprompt.theme.bash` to properly manifest git branch names in prompts. The original theme's `_lp_git_branch()` function failed to bind the branch variable.
+- **Bash-it component detection**: Corrected the manifestation rituals for aliases and completions. The installer was seeking `.alias.bash` and `.completion.bash` files, but bash-it's repository actually contains `.aliases.bash` and `.completion.bash` (with the completion directory being singular `completion/` not plural). Both installation and testing scripts now correctly bind these components.
 
 ### Changed
 - Updated testing suite to verify nano syntax highlighting installation
 - Improved error handling for missing dependencies (unzip, wget) in nano module
+- Testing rituals now properly detect all bash-it components using correct file extensions
 
 ## [Initial Release]
 
