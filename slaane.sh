@@ -3,6 +3,14 @@
 
 set -u  # Only exit on unset variables, not on errors (we handle errors)
 
+# Parse --branch flag early for bootstrap (before anything else)
+BOOTSTRAP_BRANCH="master"
+for arg in "$@"; do
+    if [[ "$arg" == --branch=* ]]; then
+        BOOTSTRAP_BRANCH="${arg#*=}"
+    fi
+done
+
 # Bootstrap: If running from pipe (curl | bash), download repo first
 SCRIPT_DIR=""
 if [[ -n "${BASH_SOURCE[0]}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
@@ -15,7 +23,7 @@ if [[ -z "$SCRIPT_DIR" ]] || [[ ! -f "$SCRIPT_DIR/lib/common.sh" ]]; then
     TEMP_DIR=$(mktemp -d -t slaane.sh.XXXXXX)
     trap "rm -rf '$TEMP_DIR'" EXIT
     
-    REPO_URL="https://github.com/DaiTengu/slaane.sh/archive/refs/heads/master.tar.gz"
+    REPO_URL="https://github.com/DaiTengu/slaane.sh/archive/refs/heads/${BOOTSTRAP_BRANCH}.tar.gz"
     
     # Check if curl or wget is available
     if command -v curl >/dev/null 2>&1; then
@@ -42,14 +50,19 @@ if [[ -z "$SCRIPT_DIR" ]] || [[ ! -f "$SCRIPT_DIR/lib/common.sh" ]]; then
         exit 1
     fi
     
-    echo "Downloading Slaane.sh repository..."
+    echo "Downloading Slaane.sh repository from branch: ${BOOTSTRAP_BRANCH}..."
     if ! (cd "$TEMP_DIR" && $DOWNLOAD_CMD "$REPO_URL" | tar -xzf - 2>/dev/null); then
-        echo "ERROR: Failed to download or extract repository."
+        echo "ERROR: Failed to download or extract repository from branch '${BOOTSTRAP_BRANCH}'."
+        echo "Please verify the branch name is correct."
         exit 1
     fi
     
+    # GitHub archives extract to: slaane.sh-<branch>/
+    # Need to sanitize branch name for directory (/ becomes -)
+    BRANCH_DIR=$(echo "$BOOTSTRAP_BRANCH" | tr '/' '-')
+    
     # Re-execute the actual slaane.sh script with original arguments
-    exec bash "$TEMP_DIR/slaane.sh-master/slaane.sh" "$@"
+    exec bash "$TEMP_DIR/slaane.sh-${BRANCH_DIR}/slaane.sh" "$@"
 fi
 
 # Source common libraries
@@ -697,6 +710,7 @@ Install Options:
   --with-bashhub       Install bashhub module
   --minimal            Install only core modules
   --skip=<modules>     Skip specific modules (comma-separated)
+  --branch=<branch>    Install from specific git branch (bootstrap only)
 
 Update Options:
   --component <name>    Update specific component
