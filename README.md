@@ -30,9 +30,20 @@ Your shell environment, perfected through obsessive customization, deserves to f
 
 ## Ritual of Installation
 
-### The Quick Path
+### The Path of Excess (Recommended)
 
-**Option 1: Clone and Install**
+Embrace the simplest corruption - a single incantation:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DaiTengu/slaane.sh/master/slaane.sh | bash -s -- install --install-prereqs
+```
+
+This downloads the repository, installs prerequisites, and corrupts your shell environment in one glorious command.
+
+### The Path of Control (Alternative)
+
+For those who prefer deliberate corruption:
+
 ```bash
 # Summon the repository
 git clone https://github.com/DaiTengu/slaane.sh.git ~/slaane.sh
@@ -42,53 +53,50 @@ cd ~/slaane.sh
 ./slaane.sh install
 ```
 
-**Option 2: Direct Installation (curl | bash)**
-```bash
-# One-liner installation
-curl -fsSL https://raw.githubusercontent.com/DaiTengu/slaane.sh/master/slaane.sh | bash -s -- install --install-prereqs
-```
+### Awakening Your Corrupted Shell
 
-### After Installation
+After the ritual completes:
 
 ```bash
-# Awaken the new environment
+# Reload your shell to embrace the changes
 source ~/.bashrc
 
-# Or begin anew
+# Or summon a fresh shell entirely
 exec bash
 ```
 
-### Installation Options
+The `slaane.sh` command is now available system-wide from `~/.local/bin/slaane.sh`.
 
-**Standard Corruption** - Installs all core components:
+### Installation Variations
+
+Once installed, `slaane.sh` is available globally. Customize your corruption:
+
+**Standard Corruption** - All core components:
 ```bash
-./slaane.sh install
+slaane.sh install
 ```
 
 **Minimal Devotion** - Only bash-it, ble.sh, and fzf:
 ```bash
-./slaane.sh install --minimal
+slaane.sh install --minimal
 ```
 
 **Skip Certain Gifts** - Reject specific modules:
 ```bash
-./slaane.sh install --skip=goenv,thefuck
+slaane.sh install --skip=goenv,thefuck
 ```
 
-**Embrace Bashhub** - Include bashhub (optional):
+**Embrace Bashhub** - Include bashhub (requires account):
 ```bash
-./slaane.sh install --with-bashhub
-```
-
-**Auto-Install Prerequisites** - Allow installer to install missing tools:
-```bash
-./slaane.sh install --install-prereqs
+slaane.sh install --with-bashhub
 ```
 
 **Force Reinstallation** - Purge and rebuild:
 ```bash
-./slaane.sh install --force
+slaane.sh install --force
 ```
+
+**Note:** The `--install-prereqs` flag is only needed for manual installations. The recommended curl method includes it automatically.
 
 ## Prerequisites
 
@@ -122,7 +130,7 @@ sudo pacman -S git curl make gawk
 
 Or submit to the installer's will:
 ```bash
-./slaane.sh install --install-prereqs
+slaane.sh install --install-prereqs
 ```
 
 ## Spreading the Corruption (Deployment)
@@ -144,23 +152,23 @@ cd slaane.sh
 ./slaane.sh install
 ```
 
-### Method 2: Direct Summoning
+### Method 2: Git-Based Summoning
 
 ```bash
 ssh user@remote
 git clone https://github.com/DaiTengu/slaane.sh.git ~/slaane.sh
 cd ~/slaane.sh
-./slaane.sh install
+./slaane.sh install --install-prereqs
 ```
 
-### Method 3: The Forbidden Script
+### Method 3: The Instantaneous Corruption
 
-Install directly via curl:
+The quickest path to perfection:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/DaiTengu/slaane.sh/master/slaane.sh | bash -s -- install --install-prereqs
+ssh user@remote 'curl -fsSL https://raw.githubusercontent.com/DaiTengu/slaane.sh/master/slaane.sh | bash -s -- install --install-prereqs'
 ```
 
-This automatically downloads the repository and executes the installation.
+One command to download, corrupt, and perfect the remote shell.
 
 ## Configuration Rituals
 
@@ -428,22 +436,48 @@ For those who seek deeper knowledge of this unholy creation:
 
 ## Banishment (Uninstallation)
 
-To purge Slaane.sh from your system:
+Should you wish to purge the Dark Prince's gifts from your system:
+
+### Complete Purge
+
+```bash
+# Banish all modules and restore your shell
+slaane.sh uninstall --all
+
+# The ritual removes:
+# - All installed modules (~/.bash_it, ~/.local/share/blesh, ~/.fzf, etc.)
+# - The slaane.sh symlink from ~/.local/bin
+# - Restores your original ~/.bashrc from ~/.bashrc.pre-slaanesh
+```
+
+### Selective Banishment
+
+```bash
+# Remove specific modules only
+slaane.sh uninstall --module bash-it
+slaane.sh uninstall --module pyenv,goenv
+
+# List what's currently bound to your system
+slaane.sh list --installed
+```
+
+### Manual Purge (If Necessary)
+
+Should the automated banishment fail:
 
 ```bash
 # Restore your original shell
 cp ~/.bashrc.pre-slaanesh ~/.bashrc
 
-# Remove the gifts
-rm -rf ~/.bash_it
-rm -rf ~/.local/share/blesh
-rm -rf ~/.fzf
-rm -rf ~/.pyenv
-rm -rf ~/.goenv
-rm -f ~/.blerc
+# Remove the repository
+rm -rf ~/slaane.sh
 
-# Uninstall pip/cargo packages if desired
-pip3 uninstall thefuck
+# Remove installed components
+rm -rf ~/.bash_it ~/.local/share/blesh ~/.fzf ~/.pyenv ~/.goenv
+rm -f ~/.blerc ~/.local/bin/slaane.sh
+
+# Remove pip/cargo packages if desired
+pip3 uninstall -y thefuck
 ```
 
 ## Testing the Installation

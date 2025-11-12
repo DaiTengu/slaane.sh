@@ -4,6 +4,13 @@ All notable changes to this unholy creation are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), but filtered through the warp.
 
+## [Unreleased]
+
+### Changed
+- **Documentation**: Prioritized curl-based installation as the recommended path to corruption
+- **Installation flow**: Simplified installation and uninstallation instructions for maximum ease of use
+- **Uninstallation guide**: Enhanced with `slaane.sh uninstall --all` command and selective banishment options
+
 ## [0.2.0] - Modular API/SDK System
 
 ### Added
@@ -30,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Test suite**: Updated to use generic test handlers and module discovery
 - **Docker tests**: Updated to use `slaane.sh install` instead of `install.sh`
 - **Documentation**: Updated README with master script commands and new architecture
+- **Global availability**: `slaane.sh` command now available system-wide via `~/.local/bin` symlink
 
 ### Removed
 - **Old module format**: All modules recreated in new standardized format
