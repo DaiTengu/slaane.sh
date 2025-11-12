@@ -63,7 +63,14 @@ if [[ -z "$SCRIPT_DIR" ]] || [[ ! -f "$SCRIPT_DIR/lib/common.sh" ]]; then
     BRANCH_DIR=$(echo "$BOOTSTRAP_BRANCH" | tr '/' '-')
     
     # Re-execute the actual slaane.sh script with original arguments
-    exec bash "$TEMP_DIR/slaane.sh-${BRANCH_DIR}/slaane.sh" "$@"
+    # Filter out --branch flag as it's only for bootstrap
+    NEW_ARGS=()
+    for arg in "$@"; do
+        if [[ "$arg" != --branch=* ]]; then
+            NEW_ARGS+=("$arg")
+        fi
+    done
+    exec bash "$TEMP_DIR/slaane.sh-${BRANCH_DIR}/slaane.sh" "${NEW_ARGS[@]}"
 fi
 
 # Source common libraries
