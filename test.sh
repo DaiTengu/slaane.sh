@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Test script for portable bash environment
+# Test script for Slaane.sh
 # Can be run locally or inside Docker containers
 
 # Don't use set -e, we want to count failures not exit immediately
@@ -16,6 +16,15 @@ TEST_RESULTS=()
 TESTS_PASSED=0
 TESTS_FAILED=0
 CRITICAL_FAILURES=0
+
+# Source module API and handlers for testing
+source "$SCRIPT_DIR/lib/common.sh"
+source "$SCRIPT_DIR/lib/module-api.sh"
+source "$SCRIPT_DIR/lib/module-handlers.sh"
+source "$SCRIPT_DIR/lib/state-tracking.sh"
+
+# Initialize
+init_common
 
 # Add common binary locations to PATH for testing
 export PATH="$HOME/.local/bin:$HOME/.fzf/bin:$HOME/.pyenv/bin:$HOME/.goenv/bin:$HOME/.cargo/bin:$PATH"
@@ -125,81 +134,50 @@ run_tests() {
     test_command_exists "git" "Git installed" || true
     test_command_exists "curl" "Curl installed" || true
     test_command_exists "make" "Make installed" || true
-    if command -v gcc &>/dev/null || command -v cc &>/dev/null; then
-        echo -e "${GREEN}✓${NC} C compiler found"
+    echo ""
+    
+    # Test module discovery
+    echo -e "${YELLOW}Testing module discovery...${NC}"
+    local discovered_modules=($(discover_modules))
+    if [[ ${#discovered_modules[@]} -gt 0 ]]; then
+        echo -e "${GREEN}✓${NC} Discovered ${#discovered_modules[@]} modules"
         TESTS_PASSED=$((TESTS_PASSED + 1))
     else
-        echo -e "${RED}✗${NC} C compiler NOT found"
+        echo -e "${RED}✗${NC} No modules discovered"
         TESTS_FAILED=$((TESTS_FAILED + 1))
+        CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
     fi
     echo ""
     
-    # Test bash-it
-    echo -e "${YELLOW}Testing bash-it...${NC}"
-    test_dir_exists "$HOME/.bash_it" "bash-it directory" || true
-    test_file_exists "$HOME/.bash_it/bash_it.sh" "bash-it main script" || true
+    # Test modules using generic test handler
+    echo -e "${YELLOW}Testing installed modules...${NC}"
+    local installed_modules=($(get_installed_modules))
     
-    # Test some bash-it components
-    if [[ -d "$HOME/.bash_it" ]]; then
-        test_bash_it_component "plugin" "base" || true
-        test_bash_it_component "plugin" "git" || true
-        test_bash_it_component "alias" "general" || true
+    if [[ ${#installed_modules[@]} -eq 0 ]]; then
+        # Test all discovered modules (they may not be installed yet)
+        for module in "${discovered_modules[@]}"; do
+            echo -e "${YELLOW}Testing module: $module${NC}"
+            if test_module_generic "$module" 2>/dev/null; then
+                echo ""
+                TESTS_PASSED=$((TESTS_PASSED + 1))
+            else
+                echo ""
+                TESTS_FAILED=$((TESTS_FAILED + 1))
+            fi
+        done
+    else
+        # Test only installed modules
+        for module in "${installed_modules[@]}"; do
+            echo -e "${YELLOW}Testing module: $module${NC}"
+            if test_module_generic "$module" 2>/dev/null; then
+                echo ""
+                TESTS_PASSED=$((TESTS_PASSED + 1))
+            else
+                echo ""
+                TESTS_FAILED=$((TESTS_FAILED + 1))
+            fi
+        done
     fi
-    echo ""
-    
-    # Test ble.sh
-    echo -e "${YELLOW}Testing ble.sh...${NC}"
-    test_file_exists "${XDG_DATA_HOME:-$HOME/.local/share}/blesh/ble.sh" "ble.sh installed" || true
-    test_file_exists "$HOME/.blerc" "ble.sh config" || true
-    echo ""
-    
-    # Test fzf
-    echo -e "${YELLOW}Testing fzf...${NC}"
-    test_dir_exists "$HOME/.fzf" "fzf directory" || true
-    test_command_exists "fzf" "fzf command" "true" || true
-    echo ""
-    
-    # Test zoxide
-    echo -e "${YELLOW}Testing zoxide...${NC}"
-    test_command_exists "zoxide" "zoxide command" || true
-    echo ""
-    
-    # Test pyenv
-    echo -e "${YELLOW}Testing pyenv...${NC}"
-    test_dir_exists "$HOME/.pyenv" "pyenv directory" || true
-    if [[ -d "$HOME/.pyenv" ]]; then
-        test_file_exists "$HOME/.pyenv/bin/pyenv" "pyenv binary" || true
-        test_dir_exists "$HOME/.pyenv/plugins/pyenv-virtualenv" "pyenv-virtualenv plugin" || true
-    fi
-    echo ""
-    
-    # Test goenv
-    echo -e "${YELLOW}Testing goenv...${NC}"
-    test_dir_exists "$HOME/.goenv" "goenv directory" || true
-    if [[ -d "$HOME/.goenv" ]]; then
-        test_file_exists "$HOME/.goenv/bin/goenv" "goenv binary" || true
-    fi
-    echo ""
-    
-    # Test thefuck
-    echo -e "${YELLOW}Testing thefuck...${NC}"
-    test_command_exists "thefuck" "thefuck command" || true
-    echo ""
-    
-    # Test nano syntax highlighting
-    echo -e "${YELLOW}Testing nano syntax highlighting...${NC}"
-    test_dir_exists "$HOME/.nano" "nano syntax directory" || true
-    if [[ -d "$HOME/.nano" ]]; then
-        local nanorc_count=$(find "$HOME/.nano" -name "*.nanorc" 2>/dev/null | wc -l)
-        if [[ $nanorc_count -gt 0 ]]; then
-            echo -e "${GREEN}✓${NC} nano syntax files: $nanorc_count files found"
-            TESTS_PASSED=$((TESTS_PASSED + 1))
-        else
-            echo -e "${YELLOW}⚠${NC} nano syntax directory exists but no .nanorc files found"
-            TESTS_FAILED=$((TESTS_FAILED + 1))
-        fi
-    fi
-    # Note: nano itself is optional, so we don't test for it
     echo ""
     
     # Test configuration files
@@ -216,15 +194,131 @@ run_tests() {
             TESTS_FAILED=$((TESTS_FAILED + 1))
         fi
         
-        if grep -q "PYENV_ROOT" "$HOME/.bashrc" || grep -q "pyenv" "$HOME/.bashrc"; then
-            echo -e "${GREEN}✓${NC} .bashrc contains pyenv configuration"
-            TESTS_PASSED=$((TESTS_PASSED + 1))
-        else
-            echo -e "${RED}✗${NC} .bashrc missing pyenv configuration"
-            TESTS_FAILED=$((TESTS_FAILED + 1))
-        fi
     fi
     echo ""
+    
+    # Test slaane.sh master script
+    echo -e "${YELLOW}Testing slaane.sh master script...${NC}"
+    if [[ -f "$SCRIPT_DIR/slaane.sh" ]]; then
+        echo -e "${GREEN}✓${NC} slaane.sh exists"
+        TESTS_PASSED=$((TESTS_PASSED + 1))
+        
+        # Test help command
+        if "$SCRIPT_DIR/slaane.sh" help &>/dev/null; then
+            echo -e "${GREEN}✓${NC} slaane.sh help works"
+            TESTS_PASSED=$((TESTS_PASSED + 1))
+        else
+            echo -e "${RED}✗${NC} slaane.sh help failed"
+            TESTS_FAILED=$((TESTS_FAILED + 1))
+        fi
+        
+        # Test list command
+        if "$SCRIPT_DIR/slaane.sh" list &>/dev/null; then
+            echo -e "${GREEN}✓${NC} slaane.sh list works"
+            TESTS_PASSED=$((TESTS_PASSED + 1))
+        else
+            echo -e "${RED}✗${NC} slaane.sh list failed"
+            TESTS_FAILED=$((TESTS_FAILED + 1))
+        fi
+    else
+        echo -e "${RED}✗${NC} slaane.sh NOT found"
+        TESTS_FAILED=$((TESTS_FAILED + 1))
+        CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
+    fi
+    echo ""
+    
+    # Test uninstall functionality (if enabled via TEST_UNINSTALL env var)
+    if [[ "${TEST_UNINSTALL:-false}" == "true" ]]; then
+        echo -e "${YELLOW}Testing complete uninstall...${NC}"
+        
+        # Verify we have modules installed before uninstalling
+        local installed_modules=($(get_installed_modules))
+        if [[ ${#installed_modules[@]} -eq 0 ]]; then
+            echo -e "${YELLOW}⚠${NC} No modules installed, skipping uninstall test"
+            echo ""
+            return 0
+        fi
+        
+        echo -e "${YELLOW}Uninstalling all modules (including core modules)...${NC}"
+        
+        # Uninstall all modules (non-interactive)
+        if { echo "yes"; } | "$SCRIPT_DIR/slaane.sh" uninstall --module all &>/dev/null; then
+            echo -e "${GREEN}✓${NC} Uninstall all command executed"
+            TESTS_PASSED=$((TESTS_PASSED + 1))
+            
+            # Verify all modules are uninstalled
+            local remaining_modules=($(get_installed_modules))
+            if [[ ${#remaining_modules[@]} -eq 0 ]]; then
+                echo -e "${GREEN}✓${NC} All modules removed from tracking"
+                TESTS_PASSED=$((TESTS_PASSED + 1))
+            else
+                echo -e "${RED}✗${NC} Some modules still tracked: ${remaining_modules[*]}"
+                TESTS_FAILED=$((TESTS_FAILED + 1))
+            fi
+            
+            # Verify core module directories are gone
+            local core_gone=true
+            for module in bash-it blesh fzf; do
+                if [[ "$module" == "bash-it" ]] && [[ -d "$HOME/.bash_it" ]]; then
+                    echo -e "${RED}✗${NC} Core module $module directory still exists: $HOME/.bash_it"
+                    core_gone=false
+                    TESTS_FAILED=$((TESTS_FAILED + 1))
+                elif [[ "$module" == "blesh" ]] && [[ -d "$HOME/.local/share/blesh" ]]; then
+                    echo -e "${RED}✗${NC} Core module $module directory still exists: $HOME/.local/share/blesh"
+                    core_gone=false
+                    TESTS_FAILED=$((TESTS_FAILED + 1))
+                elif [[ "$module" == "fzf" ]] && [[ -d "$HOME/.fzf" ]]; then
+                    echo -e "${RED}✗${NC} Core module $module directory still exists: $HOME/.fzf"
+                    core_gone=false
+                    TESTS_FAILED=$((TESTS_FAILED + 1))
+                fi
+            done
+            
+            if [[ "$core_gone" == "true" ]]; then
+                echo -e "${GREEN}✓${NC} Core module directories removed"
+                TESTS_PASSED=$((TESTS_PASSED + 1))
+            fi
+            
+            # Verify .bashrc was restored
+            if [[ -f "$HOME/.bashrc.pre-slaanesh" ]]; then
+                # Check if .bashrc was restored (should not contain slaane.sh references)
+                if ! grep -q "slaane.sh" "$HOME/.bashrc" 2>/dev/null; then
+                    echo -e "${GREEN}✓${NC} .bashrc restored (no slaane.sh references)"
+                    TESTS_PASSED=$((TESTS_PASSED + 1))
+                else
+                    echo -e "${RED}✗${NC} .bashrc still contains slaane.sh references"
+                    TESTS_FAILED=$((TESTS_FAILED + 1))
+                fi
+            else
+                echo -e "${YELLOW}⚠${NC} .bashrc.pre-slaanesh backup not found (may have been clean install)"
+            fi
+            
+            # Verify slaane.sh symlink is removed
+            if [[ ! -L "$HOME/.local/bin/slaane.sh" ]]; then
+                echo -e "${GREEN}✓${NC} slaane.sh symlink removed from PATH"
+                TESTS_PASSED=$((TESTS_PASSED + 1))
+            else
+                echo -e "${RED}✗${NC} slaane.sh symlink still exists: $HOME/.local/bin/slaane.sh"
+                TESTS_FAILED=$((TESTS_FAILED + 1))
+            fi
+            
+            # Verify state tracking directory is cleaned up (optional - may keep for debugging)
+            if [[ -d "$HOME/.slaane.sh" ]]; then
+                local state_file="$HOME/.slaane.sh/installed-modules"
+                if [[ ! -f "$state_file" ]] || [[ ! -s "$state_file" ]]; then
+                    echo -e "${GREEN}✓${NC} State tracking file is empty"
+                    TESTS_PASSED=$((TESTS_PASSED + 1))
+                else
+                    echo -e "${YELLOW}⚠${NC} State tracking file still has content (may be intentional)"
+                fi
+            fi
+            
+        else
+            echo -e "${RED}✗${NC} Uninstall all command failed"
+            TESTS_FAILED=$((TESTS_FAILED + 1))
+        fi
+        echo ""
+    fi
 }
 
 show_summary() {
@@ -236,6 +330,12 @@ show_summary() {
     echo -e "${GREEN}Passed: $TESTS_PASSED${NC}"
     echo -e "${RED}Failed: $TESTS_FAILED${NC}"
     echo ""
+    
+    # Write results to file for README update (if TEST_UNINSTALL is enabled)
+    if [[ "${TEST_UNINSTALL:-false}" == "true" ]] && [[ -n "${DISTRO_NAME:-}" ]]; then
+        local results_file="${SCRIPT_DIR:-/tmp}/.test-results.tmp"
+        echo "${DISTRO_NAME}|${TESTS_PASSED}|${TESTS_FAILED}" >> "$results_file"
+    fi
     
     if [[ $TESTS_FAILED -eq 0 ]]; then
         echo -e "${GREEN}All tests passed! ✓${NC}"

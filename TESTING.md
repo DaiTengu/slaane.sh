@@ -26,7 +26,7 @@ Test the full installation process:
 
 ```bash
 # In a temporary directory or VM
-./install.sh --install-prereqs
+./slaane.sh install --install-prereqs
 
 # Then verify
 ./test.sh
@@ -368,7 +368,7 @@ Docker tests can be slow. To speed up:
 ./test-docker.sh --distro ubuntu:22.04 --mode default
 
 # Or test locally instead of Docker
-./install.sh --install-prereqs
+./slaane.sh install --install-prereqs
 ./test.sh
 ```
 
@@ -404,7 +404,7 @@ run_tests() {
 Test installation time on different systems:
 
 ```bash
-time ./install.sh --install-prereqs
+time ./slaane.sh install --install-prereqs
 ```
 
 Expected times:
@@ -423,7 +423,7 @@ Verify the installer doesn't require unnecessary permissions:
 
 ```bash
 # Should work without root/sudo (except --install-prereqs)
-./install.sh
+./slaane.sh install
 
 # Should NOT run if prerequisites missing (graceful failure)
 # Manually remove a prerequisite and test

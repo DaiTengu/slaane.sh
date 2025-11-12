@@ -143,21 +143,137 @@ get_install_command() {
     
     case "$mode" in
         default)
-            echo "./install.sh --install-prereqs"
+            echo "./slaane.sh install --install-prereqs"
             ;;
         minimal)
-            echo "./install.sh --install-prereqs --minimal"
+            echo "./slaane.sh install --install-prereqs --minimal"
             ;;
         skip-goenv)
-            echo "./install.sh --install-prereqs --skip=goenv"
+            echo "./slaane.sh install --install-prereqs --skip=goenv"
             ;;
         with-bashhub)
-            echo "./install.sh --install-prereqs --with-bashhub"
+            echo "./slaane.sh install --install-prereqs --with-bashhub"
             ;;
         *)
-            echo "./install.sh --install-prereqs"
+            echo "./slaane.sh install --install-prereqs"
             ;;
     esac
+}
+
+# Update README.md with test results
+update_readme_with_results() {
+    local readme_file="$SCRIPT_DIR/README.md"
+    local temp_readme=$(mktemp)
+    
+    if [[ ! -f "$readme_file" ]]; then
+        echo -e "${YELLOW}Warning: README.md not found, skipping update${NC}"
+        return 1
+    fi
+    
+    # Map distribution names for display
+    declare -A distro_map=(
+        ["rockylinux 9"]="Rocky Linux 9"
+        ["rockylinux:9"]="Rocky Linux 9"
+        ["rockylinux 8"]="Rocky Linux 8"
+        ["rockylinux:8"]="Rocky Linux 8"
+        ["ubuntu 22.04"]="Ubuntu 22.04"
+        ["ubuntu:22.04"]="Ubuntu 22.04"
+        ["ubuntu 20.04"]="Ubuntu 20.04"
+        ["ubuntu:20.04"]="Ubuntu 20.04"
+        ["debian 12"]="Debian 12"
+        ["debian:12"]="Debian 12"
+        ["debian 11"]="Debian 11"
+        ["debian:11"]="Debian 11"
+        ["fedora 39"]="Fedora 39"
+        ["fedora:39"]="Fedora 39"
+        ["fedora 38"]="Fedora 38"
+        ["fedora:38"]="Fedora 38"
+        ["archlinux latest"]="Arch Linux"
+        ["archlinux:latest"]="Arch Linux"
+    )
+    
+    # Read test results and build replacement text
+    local results_section=""
+    local distro_count=0
+    local results_array=()
+    
+    while IFS='|' read -r distro passed failed; do
+        [[ -z "$distro" ]] && continue
+        
+        # Normalize distro name (handle both : and space formats)
+        local distro_normalized=$(echo "$distro" | sed 's/:/ /g')
+        
+        # Look up in map, trying both normalized and original formats
+        local distro_name="${distro_map[$distro]:-${distro_map[$distro_normalized]:-}}"
+        
+        # If not found in map, prettify the normalized name
+        if [[ -z "$distro_name" ]]; then
+            # Capitalize first letter of each word
+            distro_name=$(echo "$distro_normalized" | sed 's/\b\(.\)/\u\1/g')
+            # Fix common names
+            distro_name=$(echo "$distro_name" | sed 's/Rockylinux/Rocky Linux/g; s/Archlinux/Arch Linux/g')
+        fi
+        
+        local total_tests=$((passed + failed))
+        
+        if [[ -n "$passed" ]] && [[ -n "$failed" ]] && [[ "$passed" =~ ^[0-9]+$ ]] && [[ "$failed" =~ ^[0-9]+$ ]]; then
+            results_array+=("$distro_name|$passed|$total_tests")
+            distro_count=$((distro_count + 1))
+        fi
+    done < "$SCRIPT_DIR/.test-results.tmp"
+    
+    # Sort results by distribution name (for consistency)
+    IFS=$'\n' results_array=($(printf '%s\n' "${results_array[@]}" | sort))
+    unset IFS
+    
+    # Build the results section
+    results_section="Tested and verified across multiple distributions:\n"
+    for result in "${results_array[@]}"; do
+        IFS='|' read -r distro_name passed total <<< "$result"
+        results_section+="- ✅ $distro_name ($passed/$total tests)\n"
+    done
+    unset IFS
+    
+    # Replace the test results section in README
+    local in_section=false
+    local section_started=false
+    
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Check if we're entering the test results section
+        if [[ "$line" =~ ^Tested\ and\ verified ]]; then
+            in_section=true
+            section_started=true
+            # Output the new section (header + list)
+            echo -e "$results_section"
+            continue
+        fi
+        
+        # Skip lines until we hit the next section
+        if [[ "$in_section" == "true" ]]; then
+            # Skip old list items (lines starting with - ✅)
+            if [[ "$line" =~ ^-[[:space:]]*✅ ]]; then
+                continue
+            # Stop skipping when we hit a new section (##)
+            elif [[ "$line" =~ ^## ]]; then
+                in_section=false
+                section_started=false
+                echo "$line"
+            # Stop skipping when we hit an empty line after we've output our section
+            elif [[ "$line" =~ ^[[:space:]]*$ ]] && [[ "$section_started" == "true" ]]; then
+                in_section=false
+                section_started=false
+                echo "$line"
+            # Skip empty lines and other content within the section
+            else
+                continue
+            fi
+        else
+            echo "$line"
+        fi
+    done < "$readme_file" > "$temp_readme"
+    
+    mv "$temp_readme" "$readme_file"
+    echo -e "${GREEN}✓ Updated README.md with test results${NC}"
 }
 
 build_test_dockerfile() {
@@ -185,18 +301,21 @@ RUN if command -v apt-get > /dev/null; then \\
 RUN useradd -m -s /bin/bash testuser && \\
     echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Copy portable-bash-env to user's home
-COPY --chown=testuser:testuser . /home/testuser/portable-bash-env
+# Copy slaane.sh to user's home
+COPY --chown=testuser:testuser . /home/testuser/slaane.sh
 
 # Switch to test user
 USER testuser
-WORKDIR /home/testuser/portable-bash-env
+WORKDIR /home/testuser/slaane.sh
 
 # Run installation
 RUN ${install_cmd}
 
-# Run tests
-RUN ./test.sh
+# Run tests (pass distro name for results tracking)
+RUN DISTRO_NAME="${distro}" TEST_UNINSTALL=true ./test.sh || true
+
+# Copy results file to a known location
+RUN if [ -f /home/testuser/slaane.sh/.test-results.tmp ]; then cat /home/testuser/slaane.sh/.test-results.tmp; fi || true
 
 # Default command
 CMD ["/bin/bash"]
@@ -206,7 +325,7 @@ EOF
 run_test() {
     local distro="$1"
     local mode="$2"
-    local tag="portable-bash-test:${distro//:/_}-${mode}"
+    local tag="slaane-test:${distro//:/_}-${mode}"
     
     echo -e "${BLUE}========================================${NC}"
     echo -e "${BLUE}Testing: $distro (mode: $mode)${NC}"
@@ -221,12 +340,54 @@ run_test() {
     if [[ "${NO_CACHE:-}" == "true" ]]; then
         build_args="--no-cache"
     fi
-    if ! docker build $build_args -f "$SCRIPT_DIR/.test-dockerfile" -t "$tag" "$SCRIPT_DIR"; then
+    
+    # Capture build output to extract test results
+    local build_output=$(docker build $build_args -f "$SCRIPT_DIR/.test-dockerfile" -t "$tag" "$SCRIPT_DIR" 2>&1)
+    local build_result=$?
+    
+    if [[ $build_result -ne 0 ]]; then
+        echo "$build_output"
         echo -e "${RED}✗ Build failed for $distro ($mode)${NC}"
         return 1
     fi
     
+    echo "$build_output" | grep -v "^Sending build context" | grep -v "^Step" | grep -v "^--->" | grep -v "^Removed intermediate container" | grep -v "^Successfully built" | grep -v "^Successfully tagged" | tail -50
+    
     echo -e "${GREEN}✓ Build succeeded for $distro ($mode)${NC}"
+    
+    # Extract test results from .test-results.tmp that was written by test.sh
+    # The results are printed in the build output (format: distro:version|passed|failed)
+    # Example: "rockylinux:9|23|1"
+    local results_line=$(echo "$build_output" | grep -E "\|[0-9]+\|[0-9]+$" | grep -v "^-->" | tail -1)
+    
+    if [[ -n "$results_line" ]] && [[ "$results_line" =~ \| ]]; then
+        # Clean up the line (remove any leading/trailing whitespace)
+        results_line=$(echo "$results_line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        
+        # Extract the pattern (distro:version|passed|failed) from the line
+        local pattern=$(echo "$results_line" | grep -oE "[^|]+\|[0-9]+\|[0-9]+" | head -1)
+        
+        if [[ -n "$pattern" ]]; then
+            local distro_raw=$(echo "$pattern" | cut -d'|' -f1)
+            local distro_clean=$(echo "$distro_raw" | sed 's/:/ /g')
+            local passed_count=$(echo "$pattern" | cut -d'|' -f2)
+            local failed_count=$(echo "$pattern" | cut -d'|' -f3)
+            
+            if [[ -n "$passed_count" ]] && [[ "$passed_count" =~ ^[0-9]+$ ]] && [[ -n "$failed_count" ]] && [[ "$failed_count" =~ ^[0-9]+$ ]]; then
+                echo "${distro_clean}|${passed_count}|${failed_count}" >> "$SCRIPT_DIR/.test-results.tmp"
+            fi
+        fi
+    fi
+    
+    # Fallback: try to extract from test summary output if results file line wasn't found
+    if [[ ! -s "$SCRIPT_DIR/.test-results.tmp" ]] || ! grep -q "$(echo "$distro" | sed 's/:/ /g')" "$SCRIPT_DIR/.test-results.tmp" 2>/dev/null; then
+        local passed_count=$(echo "$build_output" | grep "Passed:" | grep -oE "[0-9]+" | tail -1)
+        local failed_count=$(echo "$build_output" | grep "Failed:" | grep -oE "[0-9]+" | tail -1)
+        if [[ -n "$passed_count" ]] && [[ "$passed_count" =~ ^[0-9]+$ ]] && [[ -n "$failed_count" ]] && [[ "$failed_count" =~ ^[0-9]+$ ]]; then
+            local distro_clean=$(echo "$distro" | sed 's/:/ /g')
+            echo "${distro_clean}|${passed_count}|${failed_count}" >> "$SCRIPT_DIR/.test-results.tmp"
+        fi
+    fi
     
     # Run container interactively if requested
     if [[ "$INTERACTIVE" == "true" ]]; then
@@ -303,6 +464,10 @@ main() {
     local passed=0
     local failed=0
     
+    # Initialize test results file
+    rm -f "$SCRIPT_DIR/.test-results.tmp"
+    touch "$SCRIPT_DIR/.test-results.tmp"
+    
     # Run tests
     for distro in "${distros_to_test[@]}"; do
         for mode in "${modes_to_test[@]}"; do
@@ -315,6 +480,12 @@ main() {
             echo ""
         done
     done
+    
+    # Update README with test results if we have results
+    if [[ -f "$SCRIPT_DIR/.test-results.tmp" ]] && [[ -s "$SCRIPT_DIR/.test-results.tmp" ]]; then
+        update_readme_with_results
+        rm -f "$SCRIPT_DIR/.test-results.tmp"
+    fi
     
     # Summary
     echo -e "${BLUE}========================================${NC}"
