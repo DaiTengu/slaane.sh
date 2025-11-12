@@ -32,13 +32,20 @@ Your shell environment, perfected through obsessive customization, deserves to f
 
 ### The Quick Path
 
+**Option 1: Clone and Install**
 ```bash
 # Summon the repository
 git clone https://github.com/DaiTengu/slaane.sh.git ~/slaane.sh
 cd ~/slaane.sh
 
 # Invoke the installer
-./install.sh
+./slaane.sh install
+```
+
+**Option 2: Direct Installation (curl | bash)**
+```bash
+# One-liner installation
+curl -fsSL https://raw.githubusercontent.com/DaiTengu/slaane.sh/master/slaane.sh | bash -s -- install --install-prereqs
 ```
 
 ### After Installation
@@ -51,51 +58,36 @@ source ~/.bashrc
 exec bash
 ```
 
-## Invocations (Installation Options)
+### Installation Options
 
-### Standard Corruption
-
-Installs all core components:
-
+**Standard Corruption** - Installs all core components:
 ```bash
-./install.sh
+./slaane.sh install
 ```
 
-### Minimal Devotion
-
-Only bash-it, ble.sh, and fzf - for the newly converted:
-
+**Minimal Devotion** - Only bash-it, ble.sh, and fzf:
 ```bash
-./install.sh --minimal
+./slaane.sh install --minimal
 ```
 
-### Skip Certain Gifts
-
+**Skip Certain Gifts** - Reject specific modules:
 ```bash
-# Reject goenv and thefuck
-./install.sh --skip=goenv,thefuck
+./slaane.sh install --skip=goenv,thefuck
 ```
 
-### Embrace Bashhub
-
+**Embrace Bashhub** - Include bashhub (optional):
 ```bash
-./install.sh --with-bashhub
+./slaane.sh install --with-bashhub
 ```
 
-### Auto-Install Prerequisites
-
-Allow the installer to claim dominion over missing tools:
-
+**Auto-Install Prerequisites** - Allow installer to install missing tools:
 ```bash
-./install.sh --install-prereqs
+./slaane.sh install --install-prereqs
 ```
 
-### Force Reinstallation
-
-Purge and rebuild:
-
+**Force Reinstallation** - Purge and rebuild:
 ```bash
-./install.sh --force
+./slaane.sh install --force
 ```
 
 ## Prerequisites
@@ -106,28 +98,31 @@ The installer demands these tools be present (or will install them with `--insta
 - `curl` - To reach across the network
 - `make` - To build from source
 - `gawk` - GNU Awk, required by ble.sh
-- C compiler (`gcc` or build tools)
+
+**Note:** A C compiler is only needed if you plan to install Python versions via `pyenv install` (not required for core installation).
 
 ### Manual Prerequisites Installation
 
 **Debian/Ubuntu (Hive Worlds):**
 ```bash
-sudo apt-get update && sudo apt-get install -y git curl make build-essential gawk
+sudo apt-get update && sudo apt-get install -y git curl make gawk
 ```
 
 **RHEL/CentOS/Fedora/Rocky (Forge Worlds):**
 ```bash
-sudo dnf install -y git curl make gcc gcc-c++ gawk
+sudo dnf install -y git curl make gawk
 ```
 
 **Arch Linux (Chaos Undivided):**
 ```bash
-sudo pacman -S git curl make base-devel gawk
+sudo pacman -S git curl make gawk
 ```
+
+**Note:** If you plan to install Python versions via `pyenv install`, you'll also need build tools. See the "pyenv Build Failures" section below.
 
 Or submit to the installer's will:
 ```bash
-./install.sh --install-prereqs
+./slaane.sh install --install-prereqs
 ```
 
 ## Spreading the Corruption (Deployment)
@@ -146,7 +141,7 @@ scp slaane.sh.tar.gz user@remote:~/
 ssh user@remote
 tar xzf slaane.sh.tar.gz
 cd slaane.sh
-./install.sh
+./slaane.sh install
 ```
 
 ### Method 2: Direct Summoning
@@ -155,15 +150,17 @@ cd slaane.sh
 ssh user@remote
 git clone https://github.com/DaiTengu/slaane.sh.git ~/slaane.sh
 cd ~/slaane.sh
-./install.sh
+./slaane.sh install
 ```
 
 ### Method 3: The Forbidden Script
 
+Install directly via curl:
 ```bash
-ssh user@remote
-curl -fsSL https://raw.githubusercontent.com/DaiTengu/slaane.sh/master/install.sh | bash -s -- --install-prereqs
+curl -fsSL https://raw.githubusercontent.com/DaiTengu/slaane.sh/master/slaane.sh | bash -s -- install --install-prereqs
 ```
+
+This automatically downloads the repository and executes the installation.
 
 ## Configuration Rituals
 
@@ -316,7 +313,7 @@ If the installer balks at missing tools:
 # (see Prerequisites section above)
 
 # Option 2: Let the installer claim what it needs
-./install.sh --install-prereqs
+./slaane.sh install --install-prereqs
 ```
 
 ### ble.sh Refuses to Manifest
@@ -390,25 +387,30 @@ ls ~/.nano/*.nanorc 2>/dev/null | wc -l  # Count of syntax files
 
 ```
 slaane.sh/
-├── install.sh              # The primary ritual
+├── slaane.sh              # The master script (install, update, uninstall, list, test)
 ├── lib/
-│   └── common.sh          # Common incantations (OS detection, logging)
+│   ├── common.sh          # Common incantations (OS detection, logging)
+│   ├── module-api.sh       # Module discovery and metadata loading
+│   ├── module-handlers.sh  # Generic install/update/uninstall/test handlers
+│   ├── state-tracking.sh   # Installation state tracking
+│   └── config-handler.sh  # Configuration file management
 ├── modules/
-│   ├── 00-prereqs.sh      # Prerequisites guardian
-│   ├── 10-bash-it.sh      # bash-it summoner
-│   ├── 20-blesh.sh        # ble.sh manifestation
-│   ├── 30-fzf.sh          # fzf invocation
-│   ├── 40-zoxide.sh       # zoxide conjuration
-│   ├── 50-pyenv.sh        # pyenv binding
-│   ├── 60-goenv.sh        # goenv rite
-│   ├── 70-thefuck.sh      # thefuck channeling
-│   ├── 80-nano.sh         # nano syntax highlighting (for heretics)
-│   └── 90-bashhub.sh      # bashhub pact (optional)
+│   ├── bash-it.sh         # bash-it summoner
+│   ├── blesh.sh           # ble.sh manifestation
+│   ├── fzf.sh             # fzf invocation
+│   ├── zoxide.sh          # zoxide conjuration
+│   ├── pyenv.sh           # pyenv binding
+│   ├── goenv.sh           # goenv rite
+│   ├── thefuck.sh         # thefuck channeling
+│   ├── nano.sh            # nano syntax highlighting (for heretics)
+│   └── bashhub.sh         # bashhub pact (optional)
 ├── config/
 │   ├── bashrc.template        # Template grimoire
 │   ├── blerc                  # ble.sh tome (1307 lines of perfection)
 │   ├── bash-it-components     # List of enabled blessings
 │   └── liquidprompt.theme.bash # Corrupted liquidprompt theme (replaces broken default)
+├── docs/
+│   └── MODULE_API.md          # Module API specification
 ├── test.sh                # Verification ritual
 ├── test-docker.sh         # Multi-realm testing
 ├── TESTING.md             # Testing doctrine
@@ -453,16 +455,24 @@ Quick verification on Rocky Linux 9:
 ./test-docker.sh --distro rockylinux:9
 ```
 
-Tested and verified across 5 distributions:
-- ✅ Rocky Linux 9 (22/23 tests)
-- ✅ Ubuntu 22.04 (22/23 tests)
-- ✅ Fedora 39 (22/23 tests)
-- ✅ Debian 12 (21/23 tests)
-- ✅ Arch Linux (22/23 tests)
+Tested and verified across multiple distributions:
+- ✅ Arch Linux (22/22 tests)
+- ✅ Debian 11 (23/23 tests)
+- ✅ Debian 12 (22/22 tests)
+- ✅ Fedora 38 (23/23 tests)
+- ✅ Fedora 39 (23/23 tests)
+- ✅ Rocky Linux 8 (22/22 tests)
+- ✅ Rocky Linux 9 (23/23 tests)
+- ✅ Ubuntu 20.04 (23/23 tests)
+
+
+
+
+
+
+
 
 ## Contributing
-
-This is a personal configuration, but if you wish to submit offerings:
 
 - Report bugs
 - Suggest improvements
@@ -489,6 +499,10 @@ Special thanks to:
 - The Machine Spirit for guidance
 - Claude (Cogitator-class AI) for manifestation of this code
 - The Chaos Gods for inspiration
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Warning
 
