@@ -150,6 +150,42 @@ cmd_install() {
     
     log_info "Starting Slaane.sh installation..."
     
+    # If running from a temp directory (bootstrap), clone repo to permanent location
+    if [[ "$SCRIPT_DIR" == /tmp/* ]] || [[ "$SCRIPT_DIR" == /var/tmp/* ]]; then
+        local target_dir="$HOME/slaane.sh"
+        
+        if [[ -d "$target_dir" ]] && [[ "$force_install" != "true" ]]; then
+            log_info "Repository already exists at $target_dir"
+        else
+            log_info "Cloning repository to $target_dir..."
+            
+            # Determine which branch to clone
+            local clone_branch="${BOOTSTRAP_BRANCH:-master}"
+            
+            # Remove existing if force install
+            if [[ -d "$target_dir" ]] && [[ "$force_install" == "true" ]]; then
+                rm -rf "$target_dir"
+            fi
+            
+            if git clone -b "$clone_branch" https://github.com/DaiTengu/slaane.sh.git "$target_dir"; then
+                log_success "Repository cloned to $target_dir"
+                # Update SCRIPT_DIR to point to permanent location
+                SCRIPT_DIR="$target_dir"
+                # Re-source libraries from permanent location
+                source "$SCRIPT_DIR/lib/common.sh"
+                source "$SCRIPT_DIR/lib/module-api.sh"
+                source "$SCRIPT_DIR/lib/module-handlers.sh"
+                source "$SCRIPT_DIR/lib/state-tracking.sh"
+                source "$SCRIPT_DIR/lib/config-handler.sh"
+                init_common
+                init_state_tracking
+            else
+                log_error "Failed to clone repository"
+                return 1
+            fi
+        fi
+    fi
+    
     # Handle prerequisites if requested
     if [[ "$install_prereqs" == "true" ]]; then
         log_info "Installing prerequisites..."
