@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # Slaane.sh Master Script - Unified interface for install/update/uninstall/list/test
 
-set -u  # Only exit on unset variables, not on errors (we handle errors)
-
 # Parse --branch flag early for bootstrap (before anything else)
 BOOTSTRAP_BRANCH="master"
 for arg in "$@"; do
@@ -13,9 +11,12 @@ done
 
 # Bootstrap: If running from pipe (curl | bash), download repo first
 SCRIPT_DIR=""
-if [[ -n "${BASH_SOURCE[0]}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
+if [[ -n "${BASH_SOURCE[0]:-}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" 2>/dev/null || true
 fi
+
+# Now set -u after we've handled potentially unset variables
+set -u
 
 # If we couldn't determine a valid script directory, we're being piped
 if [[ -z "$SCRIPT_DIR" ]] || [[ ! -f "$SCRIPT_DIR/lib/common.sh" ]]; then
