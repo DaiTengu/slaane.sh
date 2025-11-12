@@ -96,6 +96,7 @@ cmd_install() {
     local force_install=false
     local with_bashhub=false
     local minimal_install=false
+    local prefer_global=false
     local skip_modules=()
     
     # Parse arguments
@@ -117,6 +118,10 @@ cmd_install() {
                 minimal_install=true
                 shift
                 ;;
+            --global)
+                prefer_global=true
+                shift
+                ;;
             --skip=*)
                 local skip_list="${1#*=}"
                 IFS=',' read -ra skip_modules <<< "$skip_list"
@@ -136,6 +141,12 @@ cmd_install() {
     export WITH_BASHHUB="$with_bashhub"
     export SKIP_MODULES=("${skip_modules[@]}")
     export MINIMAL_INSTALL="$minimal_install"
+    export PREFER_GLOBAL="$prefer_global"
+    
+    # Set AUTO_SUDO if --install-prereqs or --global is set
+    if [[ "$install_prereqs" == "true" ]] || [[ "$prefer_global" == "true" ]]; then
+        export AUTO_SUDO="true"
+    fi
     
     log_info "Starting Slaane.sh installation..."
     
@@ -717,6 +728,7 @@ Install Options:
   --force              Force reinstallation of modules
   --with-bashhub       Install bashhub module
   --minimal            Install only core modules
+  --global             Prefer system-wide (package manager) installations
   --skip=<modules>     Skip specific modules (comma-separated)
   --branch=<branch>    Install from specific git branch (bootstrap only)
 

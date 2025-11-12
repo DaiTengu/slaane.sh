@@ -110,14 +110,59 @@ has_sudo() {
     return 1
 }
 
+# Global flag to track sudo consent
+SUDO_DECLINED="${SUDO_DECLINED:-false}"
+AUTO_SUDO="${AUTO_SUDO:-false}"  # Set by --install-prereqs or --global
+PREFER_GLOBAL="${PREFER_GLOBAL:-false}"  # Set by --global flag
+
+# Prompt user for sudo permission
+prompt_for_sudo() {
+    local operation="$1"
+    
+    # If user already declined sudo this session, don't prompt again
+    if [[ "$SUDO_DECLINED" == "true" ]]; then
+        return 1
+    fi
+    
+    # If auto-sudo is enabled (--install-prereqs or --global), don't prompt
+    if [[ "$AUTO_SUDO" == "true" ]]; then
+        return 0
+    fi
+    
+    # Check if we have passwordless sudo already
+    if has_sudo; then
+        return 0
+    fi
+    
+    # Prompt user
+    log_warning "Operation requires sudo access: $operation"
+    read -p "Allow sudo for this operation? [y/N] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        return 0
+    else
+        log_info "Sudo declined - will attempt local installation methods"
+        SUDO_DECLINED=true
+        return 1
+    fi
+}
+
 # Run command with sudo if not root
+# Now respects sudo prompting
 run_as_root() {
+    local operation="${RUN_AS_ROOT_OPERATION:-system operation}"
+    
     if is_root; then
         "$@"
-    elif has_sudo; then
-        sudo "$@"
+    elif prompt_for_sudo "$operation"; then
+        if command_exists sudo; then
+            sudo "$@"
+        else
+            log_error "sudo command not found"
+            return 1
+        fi
     else
-        log_error "This operation requires sudo access"
+        log_error "This operation requires sudo access (declined or unavailable)"
         return 1
     fi
 }

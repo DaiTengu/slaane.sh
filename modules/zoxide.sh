@@ -77,6 +77,55 @@ install_zoxide_from_package_manager() {
     fi
 }
 
+install_zoxide_from_binary() {
+    log_info "Installing zoxide from precompiled binary..."
+    
+    # Detect architecture
+    local arch=$(uname -m)
+    local binary_name=""
+    
+    case "$arch" in
+        x86_64)
+            binary_name="zoxide-x86_64-unknown-linux-musl"
+            ;;
+        aarch64)
+            binary_name="zoxide-aarch64-unknown-linux-musl"
+            ;;
+        armv7l)
+            binary_name="zoxide-armv7-unknown-linux-musleabihf"
+            ;;
+        *)
+            log_warning "Unsupported architecture for binary download: $arch"
+            return 1
+            ;;
+    esac
+    
+    # Create ~/.local/bin if it doesn't exist
+    mkdir -p "$HOME/.local/bin"
+    
+    # Download and extract
+    local url="https://github.com/ajeetdsouza/zoxide/releases/latest/download/${binary_name}.tar.gz"
+    if ! curl -sSfL "$url" | tar xz -C "$HOME/.local/bin/" zoxide 2>/dev/null; then
+        log_error "Failed to download or extract zoxide binary"
+        return 1
+    fi
+    
+    chmod +x "$HOME/.local/bin/zoxide"
+    
+    # Add to PATH if not already
+    if [[ -d "$HOME/.local/bin" ]]; then
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
+    
+    if command_exists zoxide; then
+        log_success "zoxide installed from precompiled binary"
+        return 0
+    else
+        log_error "zoxide binary installation verification failed"
+        return 1
+    fi
+}
+
 install_zoxide_from_official_script() {
     log_info "Installing zoxide from official install script..."
     
@@ -126,14 +175,29 @@ main_module() {
     fi
     
     # Try methods in order of preference
-    if install_zoxide_from_package_manager; then
+    # Prefer global install if requested
+    if [[ "${PREFER_GLOBAL:-false}" == "true" ]]; then
+        if install_zoxide_from_package_manager; then
+            return 0
+        fi
+    fi
+    
+    # Try binary download first (no sudo needed)
+    if install_zoxide_from_binary; then
         return 0
     fi
     
+    # Fall back to official script
     if install_zoxide_from_official_script; then
         return 0
     fi
     
+    # Try package manager if binary failed
+    if install_zoxide_from_package_manager; then
+        return 0
+    fi
+    
+    # Last resort: cargo (if available)
     if command_exists cargo && install_zoxide_from_cargo; then
         return 0
     fi

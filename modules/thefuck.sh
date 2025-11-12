@@ -121,13 +121,20 @@ main_module() {
         return 0
     fi
     
-    # Try package manager first
-    if install_thefuck_via_package_manager; then
+    # Prefer global install if requested
+    if [[ "${PREFER_GLOBAL:-false}" == "true" ]]; then
+        if install_thefuck_via_package_manager; then
+            return 0
+        fi
+    fi
+    
+    # Try pip first (local install with --user)
+    if install_thefuck_via_pip; then
         return 0
     fi
     
-    # Fall back to pip
-    if install_thefuck_via_pip; then
+    # Fall back to package manager if pip failed
+    if install_thefuck_via_package_manager; then
         return 0
     fi
     

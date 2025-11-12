@@ -482,8 +482,12 @@ main() {
     done
     
     # Update README with test results if we have results
-    if [[ -f "$SCRIPT_DIR/.test-results.tmp" ]] && [[ -s "$SCRIPT_DIR/.test-results.tmp" ]]; then
+    # Skip update if SKIP_README_UPDATE is set (for single-distro testing)
+    if [[ -f "$SCRIPT_DIR/.test-results.tmp" ]] && [[ -s "$SCRIPT_DIR/.test-results.tmp" ]] && [[ "${SKIP_README_UPDATE:-false}" != "true" ]]; then
         update_readme_with_results
+        rm -f "$SCRIPT_DIR/.test-results.tmp"
+    elif [[ -f "$SCRIPT_DIR/.test-results.tmp" ]]; then
+        # Clean up temp file even if we skip the update
         rm -f "$SCRIPT_DIR/.test-results.tmp"
     fi
     

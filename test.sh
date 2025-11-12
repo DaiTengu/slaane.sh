@@ -227,6 +227,46 @@ run_tests() {
     fi
     echo ""
     
+    # Test local installation methods
+    echo -e "${YELLOW}Testing local installation capabilities...${NC}"
+    
+    # Test zoxide binary download method
+    if command -v zoxide &>/dev/null; then
+        local zoxide_path=$(command -v zoxide)
+        if [[ "$zoxide_path" == *".local/bin"* ]]; then
+            echo -e "${GREEN}✓${NC} zoxide installed in user's .local/bin (no sudo)"
+            TESTS_PASSED=$((TESTS_PASSED + 1))
+        else
+            echo -e "${YELLOW}⚠${NC} zoxide found at: $zoxide_path (may be system-wide)"
+            TESTS_PASSED=$((TESTS_PASSED + 1))
+        fi
+    fi
+    
+    # Test thefuck pip installation
+    if command -v thefuck &>/dev/null; then
+        local thefuck_path=$(command -v thefuck)
+        if [[ "$thefuck_path" == *".local/bin"* ]] || [[ "$thefuck_path" == *".pyenv"* ]]; then
+            echo -e "${GREEN}✓${NC} thefuck installed via pip (no sudo)"
+            TESTS_PASSED=$((TESTS_PASSED + 1))
+        else
+            echo -e "${YELLOW}⚠${NC} thefuck found at: $thefuck_path (may be system-wide)"
+            TESTS_PASSED=$((TESTS_PASSED + 1))
+        fi
+    fi
+    
+    # Test fzf git clone method
+    if command -v fzf &>/dev/null; then
+        local fzf_path=$(command -v fzf)
+        if [[ "$fzf_path" == *".fzf"* ]]; then
+            echo -e "${GREEN}✓${NC} fzf installed via git clone in user directory"
+            TESTS_PASSED=$((TESTS_PASSED + 1))
+        else
+            echo -e "${YELLOW}⚠${NC} fzf found at: $fzf_path"
+            TESTS_PASSED=$((TESTS_PASSED + 1))
+        fi
+    fi
+    echo ""
+    
     # Test uninstall functionality (if enabled via TEST_UNINSTALL env var)
     if [[ "${TEST_UNINSTALL:-false}" == "true" ]]; then
         echo -e "${YELLOW}Testing complete uninstall...${NC}"

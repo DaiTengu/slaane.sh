@@ -91,6 +91,11 @@ slaane.sh install --skip=goenv,thefuck
 slaane.sh install --with-bashhub
 ```
 
+**System-Wide Corruption** - Invoke the machine's overseers (requires sudo):
+```bash
+slaane.sh install --global
+```
+
 **Force Reinstallation** - Purge and rebuild:
 ```bash
 slaane.sh install --force
@@ -107,7 +112,16 @@ The installer demands these tools be present (or will install them with `--insta
 - `make` - To build from source
 - `gawk` - GNU Awk, required by ble.sh
 
-**Note:** A C compiler is only needed if you plan to install Python versions via `pyenv install` (not required for core installation).
+### The Price of Perfection
+
+**The Dark Prince's gifts require no sacrifice of privilege:**
+
+- **Modules** (fzf, zoxide, thefuck, pyenv, goenv) corrupt only your personal domain
+- **Prerequisites** (git, curl, make, gawk) may demand elevated rites if absent
+- The installer seeks your blessing before invoking sudo (unless `--install-prereqs` or `--global` compels it)
+- The `--global` flag summons system-wide installations through your machine's package overseer (requires sudo)
+
+**Note:** A C compiler is only needed if you seek to forge Python versions via `pyenv install` (not required for the base corruption).
 
 ### Manual Prerequisites Installation
 
@@ -498,13 +512,6 @@ Tested and verified across multiple distributions:
 - ✅ Rocky Linux 8 (22/22 tests)
 - ✅ Rocky Linux 9 (23/23 tests)
 - ✅ Ubuntu 20.04 (23/23 tests)
-
-
-
-
-
-
-
 
 ## Contributing
 
