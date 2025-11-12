@@ -2,20 +2,38 @@
 # Module: fzf installation
 # Installs fzf (fuzzy finder) with architecture detection
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../lib/common.sh"
+# Metadata: START
+MODULE_NAME="fzf"
+MODULE_DESCRIPTION="Fuzzy finder for command-line"
+MODULE_ENABLED_BY_DEFAULT="true"
+MODULE_IS_CORE="true"
+MODULE_DEPENDS=""
+MODULE_INSTALL_METHOD="custom"
+MODULE_INSTALL_DIRS="$HOME/.fzf"
+MODULE_UPDATE_METHOD="git_pull"
+MODULE_UPDATE_DIR="$HOME/.fzf"
+MODULE_UNINSTALL_DIRS="$HOME/.fzf"
+MODULE_CONFIG_FILES=""
+MODULE_TEST_DIRS="$HOME/.fzf"
+MODULE_TEST_BINARIES="fzf"
+# Metadata: END
+
+# Bootstrap module environment
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/module-api.sh"
+bootstrap_module
 
 FZF_REPO="https://github.com/junegunn/fzf.git"
 FZF_DIR="$HOME/.fzf"
 
-check_fzf_installed() {
+check_module_installed() {
     command_exists fzf && [[ -d "$FZF_DIR" ]]
 }
 
-install_fzf() {
+main_module() {
     log_info "Installing fzf..."
     
-    if check_fzf_installed && [[ "${FORCE_INSTALL:-}" != "true" ]]; then
+    if check_module_installed && [[ "${FORCE_INSTALL:-}" != "true" ]]; then
         log_warning "fzf is already installed"
         log_info "Use --force to reinstall"
         return 0
@@ -64,18 +82,14 @@ install_fzf() {
     fi
 }
 
-# Main module execution
-main_fzf() {
-    if ! install_fzf; then
-        return 1
+update_module() {
+    update_via_git_pull "$MODULE_NAME"
+    if [[ $? -eq 0 ]]; then
+        # Re-run install script to update binary
+        log_info "Updating fzf binary..."
+        cd "$FZF_DIR" && ./install --bin --no-update-rc
+        return $?
     fi
-    
-    return 0
+    return 1
 }
-
-# Run if executed directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    init_common
-    main_fzf
-fi
 

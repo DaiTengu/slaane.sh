@@ -2,27 +2,38 @@
 # Module: nano syntax highlighting installation
 # Installs nano syntax highlighting from galenguyer/nano-syntax-highlighting
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../lib/common.sh"
+# Metadata: START
+MODULE_NAME="nano"
+MODULE_DESCRIPTION="Nano syntax highlighting"
+MODULE_ENABLED_BY_DEFAULT="true"
+MODULE_IS_CORE="false"
+MODULE_DEPENDS=""
+MODULE_INSTALL_METHOD="custom"
+MODULE_INSTALL_DIRS="$HOME/.nano"
+MODULE_UPDATE_METHOD="reinstall"
+MODULE_UNINSTALL_DIRS="$HOME/.nano"
+MODULE_CONFIG_FILES=""
+MODULE_TEST_DIRS="$HOME/.nano"
+# Metadata: END
+
+# Bootstrap module environment
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$SCRIPT_DIR/lib/module-api.sh"
+bootstrap_module
 
 NANO_SYNTAX_INSTALLER_URL="https://raw.githubusercontent.com/galenguyer/nano-syntax-highlighting/master/install.sh"
 NANO_SYNTAX_DIR="$HOME/.nano"
 
-check_nano_installed() {
-    command_exists nano
-}
-
-check_nano_syntax_installed() {
+check_module_installed() {
     [[ -d "$NANO_SYNTAX_DIR" ]] && [[ -n "$(ls -A "$NANO_SYNTAX_DIR"/*.nanorc 2>/dev/null)" ]]
 }
 
 install_nano_if_needed() {
-    if check_nano_installed; then
+    if command_exists nano; then
         log_info "nano is already installed"
         return 0
     fi
     
-    # Only install nano if --install-prereqs is set
     if [[ "${INSTALL_PREREQS:-}" != "true" ]]; then
         log_warning "nano is not installed"
         log_info "Syntax highlighting will be installed but won't work until nano is installed"
@@ -34,13 +45,11 @@ install_nano_if_needed() {
     
     if [[ "$PKG_MANAGER" == "unknown" ]]; then
         log_warning "Cannot determine package manager. Please install nano manually"
-        return 0  # Non-fatal, continue with syntax highlighting installation
+        return 0
     fi
     
-    # nano package name is consistent across distributions
     local nano_pkg=$(get_package_names "nano")
     if [[ -z "$nano_pkg" ]]; then
-        # Fallback to "nano" if get_package_names doesn't know about it
         nano_pkg="nano"
     fi
     
@@ -50,20 +59,24 @@ install_nano_if_needed() {
         return 0
     else
         log_warning "Failed to install nano, but continuing with syntax highlighting installation"
-        return 0  # Non-fatal
+        return 0
     fi
 }
 
-install_nano_syntax() {
+main_module() {
+    # Install nano if needed (only if --install-prereqs is set)
+    install_nano_if_needed
+    
+    # Install syntax highlighting
     log_info "Installing nano syntax highlighting..."
     
-    if check_nano_syntax_installed && [[ "${FORCE_INSTALL:-}" != "true" ]]; then
+    if check_module_installed && [[ "${FORCE_INSTALL:-}" != "true" ]]; then
         log_warning "Nano syntax highlighting is already installed at $NANO_SYNTAX_DIR"
         log_info "Use --force to reinstall"
         return 0
     fi
     
-    # Check for dependencies required by the installer (unzip and wget)
+    # Check for dependencies
     local missing_deps=()
     if ! command_exists unzip; then
         missing_deps+=("unzip")
@@ -74,7 +87,7 @@ install_nano_syntax() {
     
     if [[ ${#missing_deps[@]} -gt 0 ]]; then
         if [[ "${INSTALL_PREREQS:-}" == "true" ]]; then
-            log_info "Installing missing dependencies: ${missing_deps[*]} (required for nano syntax highlighting)..."
+            log_info "Installing missing dependencies: ${missing_deps[*]}..."
             if [[ "$PKG_MANAGER" != "unknown" ]]; then
                 local to_install=()
                 for dep in "${missing_deps[@]}"; do
@@ -86,7 +99,6 @@ install_nano_syntax() {
                 done
                 if ! run_as_root $PKG_INSTALL "${to_install[@]}"; then
                     log_error "Failed to install dependencies: ${missing_deps[*]}"
-                    log_error "Cannot continue with nano syntax highlighting installation."
                     return 1
                 fi
             else
@@ -108,39 +120,20 @@ install_nano_syntax() {
     fi
     
     # Verify installation
-    if check_nano_syntax_installed; then
+    if check_module_installed; then
         log_success "Nano syntax highlighting installed successfully"
-        
-        # Check if nano is available to show version
-        if check_nano_installed; then
+        if command_exists nano; then
             log_info "Nano version: $(nano --version | head -n1)"
-        else
-            log_info "Note: nano is not installed. Syntax highlighting files are ready but won't work until nano is installed"
         fi
-        
         return 0
     else
         log_warning "Installation completed but syntax files not found. This is okay if nano isn't installed yet."
-        return 0  # Non-fatal
+        return 0
     fi
 }
 
-# Main module execution
-main_nano() {
-    # Install nano if needed (only if --install-prereqs is set)
-    install_nano_if_needed
-    
-    # Install syntax highlighting (works even if nano isn't installed)
-    if ! install_nano_syntax; then
-        log_warning "Nano syntax highlighting installation had issues, but continuing..."
-    fi
-    
-    return 0
+update_module() {
+    # Reinstall to get latest syntax files
+    update_via_reinstall "$MODULE_NAME"
 }
-
-# Run if executed directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    init_common
-    main_nano
-fi
 
