@@ -537,6 +537,7 @@ cmd_update() {
 cmd_uninstall() {
     local module=""
     local uninstall_all=false
+    local purge=false
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -549,6 +550,11 @@ cmd_uninstall() {
                 fi
                 shift 2
                 ;;
+            --purge)
+                purge=true
+                uninstall_all=true
+                shift
+                ;;
             *)
                 log_error "Unknown option: $1"
                 show_usage
@@ -560,7 +566,12 @@ cmd_uninstall() {
     # Confirmation prompt
     if [[ "$uninstall_all" == "true" ]]; then
         echo ""
-        log_warning "This will remove ALL installed modules and restore original .bashrc"
+        if [[ "$purge" == "true" ]]; then
+            log_warning "This will remove ALL installed modules, restore original .bashrc,"
+            log_warning "and completely remove the slaane.sh installation from this system."
+        else
+            log_warning "This will remove ALL installed modules and restore original .bashrc"
+        fi
         read -p "Continue with uninstall? (yes/no): " -r
         if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
             log_info "Uninstall cancelled"
@@ -605,7 +616,32 @@ cmd_uninstall() {
         # Clear tracking
         clear_tracking
         
-        log_success "All modules uninstalled"
+        # Purge: Remove slaane.sh installation completely
+        if [[ "$purge" == "true" ]]; then
+            # Remove state tracking directory
+            if [[ -d "$HOME/.slaane.sh" ]]; then
+                rm -rf "$HOME/.slaane.sh"
+                log_info "Removed state directory: ~/.slaane.sh"
+            fi
+            
+            # Remove backup .bashrc
+            if [[ -f "$HOME/.bashrc.pre-slaanesh" ]]; then
+                rm -f "$HOME/.bashrc.pre-slaanesh"
+                log_info "Removed backup: ~/.bashrc.pre-slaanesh"
+            fi
+            
+            # Remove slaane.sh repository
+            if [[ -d "$SCRIPT_DIR" ]] && [[ "$SCRIPT_DIR" == "$HOME"* ]]; then
+                log_info "Removing slaane.sh repository: $SCRIPT_DIR"
+                rm -rf "$SCRIPT_DIR"
+                log_success "Slaane.sh completely purged from system"
+            else
+                log_warning "Not removing $SCRIPT_DIR (not in home directory)"
+                log_success "All modules uninstalled (use 'rm -rf $SCRIPT_DIR' to remove repository)"
+            fi
+        else
+            log_success "All modules uninstalled"
+        fi
     else
         log_info "Uninstalling module: $module"
         if uninstall_module_generic "$module"; then
@@ -779,6 +815,7 @@ Update Options:
 Uninstall Options:
   --module <name>      Uninstall specific module
   --module all         Uninstall all modules
+  --purge              Complete removal (all modules + slaane.sh itself)
 
 List Options:
   --available          List all available modules (default)
@@ -792,6 +829,7 @@ Examples:
   slaane.sh install --install-prereqs
   slaane.sh update --component bash-it
   slaane.sh uninstall --module all
+  slaane.sh uninstall --purge
   slaane.sh list --installed
   slaane.sh test --module all
 EOF

@@ -267,8 +267,8 @@ run_tests() {
     fi
     echo ""
     
-    # Test uninstall functionality (if enabled via TEST_UNINSTALL env var)
-    if [[ "${TEST_UNINSTALL:-false}" == "true" ]]; then
+    # Test uninstall functionality (always enabled, can disable with TEST_UNINSTALL=false)
+    if [[ "${TEST_UNINSTALL:-true}" == "true" ]]; then
         echo -e "${YELLOW}Testing complete uninstall...${NC}"
         
         # Verify we have modules installed before uninstalling
@@ -280,9 +280,10 @@ run_tests() {
         fi
         
         echo -e "${YELLOW}Uninstalling all modules (including core modules)...${NC}"
+        echo -e "${YELLOW}Testing complete purge (removes slaane.sh repository)...${NC}"
         
-        # Uninstall all modules (non-interactive)
-        if { echo "yes"; } | "$SCRIPT_DIR/slaane.sh" uninstall --module all &>/dev/null; then
+        # Uninstall with --purge (complete removal)
+        if { echo "yes"; } | "$SCRIPT_DIR/slaane.sh" uninstall --purge &>/dev/null; then
             echo -e "${GREEN}✓${NC} Uninstall all command executed"
             TESTS_PASSED=$((TESTS_PASSED + 1))
             
@@ -342,15 +343,30 @@ run_tests() {
                 TESTS_FAILED=$((TESTS_FAILED + 1))
             fi
             
-            # Verify state tracking directory is cleaned up (optional - may keep for debugging)
-            if [[ -d "$HOME/.slaane.sh" ]]; then
-                local state_file="$HOME/.slaane.sh/installed-modules"
-                if [[ ! -f "$state_file" ]] || [[ ! -s "$state_file" ]]; then
-                    echo -e "${GREEN}✓${NC} State tracking file is empty"
-                    TESTS_PASSED=$((TESTS_PASSED + 1))
-                else
-                    echo -e "${YELLOW}⚠${NC} State tracking file still has content (may be intentional)"
-                fi
+            # Verify complete purge - state directory and backup should be removed
+            if [[ ! -d "$HOME/.slaane.sh" ]]; then
+                echo -e "${GREEN}✓${NC} State tracking directory removed"
+                TESTS_PASSED=$((TESTS_PASSED + 1))
+            else
+                echo -e "${RED}✗${NC} State tracking directory still exists: $HOME/.slaane.sh"
+                TESTS_FAILED=$((TESTS_FAILED + 1))
+            fi
+            
+            if [[ ! -f "$HOME/.bashrc.pre-slaanesh" ]]; then
+                echo -e "${GREEN}✓${NC} Backup .bashrc removed"
+                TESTS_PASSED=$((TESTS_PASSED + 1))
+            else
+                echo -e "${RED}✗${NC} Backup .bashrc still exists"
+                TESTS_FAILED=$((TESTS_FAILED + 1))
+            fi
+            
+            # Verify slaane.sh repository is removed
+            if [[ ! -d "$SCRIPT_DIR" ]]; then
+                echo -e "${GREEN}✓${NC} slaane.sh repository completely removed"
+                TESTS_PASSED=$((TESTS_PASSED + 1))
+            else
+                echo -e "${RED}✗${NC} slaane.sh repository still exists: $SCRIPT_DIR"
+                TESTS_FAILED=$((TESTS_FAILED + 1))
             fi
             
         else
@@ -371,8 +387,8 @@ show_summary() {
     echo -e "${RED}Failed: $TESTS_FAILED${NC}"
     echo ""
     
-    # Write results to file for README update (if TEST_UNINSTALL is enabled)
-    if [[ "${TEST_UNINSTALL:-false}" == "true" ]] && [[ -n "${DISTRO_NAME:-}" ]]; then
+    # Write results to file for README update (if DISTRO_NAME is set)
+    if [[ "${TEST_UNINSTALL:-true}" == "true" ]] && [[ -n "${DISTRO_NAME:-}" ]]; then
         local results_file="${SCRIPT_DIR:-/tmp}/.test-results.tmp"
         echo "${DISTRO_NAME}|${TESTS_PASSED}|${TESTS_FAILED}" >> "$results_file"
     fi
