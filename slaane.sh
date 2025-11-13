@@ -162,28 +162,29 @@ cmd_install() {
     if [[ "$SCRIPT_DIR" == /tmp/* ]] || [[ "$SCRIPT_DIR" == /var/tmp/* ]]; then
         local target_dir="$HOME/slaane.sh"
         
-        if [[ -d "$target_dir" ]] && [[ "$force_install" != "true" ]]; then
-            log_info "Repository already exists at $target_dir"
-        else
-            log_info "Cloning repository to $target_dir..."
-            
-            # Determine which branch to clone
-            local clone_branch="${BOOTSTRAP_BRANCH:-master}"
-            
-            # Remove existing if force install
-            if [[ -d "$target_dir" ]] && [[ "$force_install" == "true" ]]; then
+        # Clone or remove+reclone if needed
+        if [[ -d "$target_dir" ]]; then
+            if [[ "$force_install" == "true" ]]; then
+                log_info "Removing existing repository at $target_dir..."
                 rm -rf "$target_dir"
-            fi
-            
-            if git clone -b "$clone_branch" https://github.com/DaiTengu/slaane.sh.git "$target_dir"; then
-                log_success "Repository cloned to $target_dir"
-                # Re-execute from permanent location with original arguments
-                cd "$target_dir"
-                exec bash "$target_dir/slaane.sh" install "$@"
             else
-                log_error "Failed to clone repository"
-                return 1
+                log_info "Using existing repository at $target_dir"
+                # Re-execute from permanent location
+                exec bash "$target_dir/slaane.sh" install "$@"
             fi
+        fi
+        
+        # Clone the repository
+        log_info "Cloning repository to $target_dir..."
+        local clone_branch="${BOOTSTRAP_BRANCH:-master}"
+        
+        if git clone -b "$clone_branch" https://github.com/DaiTengu/slaane.sh.git "$target_dir"; then
+            log_success "Repository cloned to $target_dir"
+            # Re-execute from permanent location
+            exec bash "$target_dir/slaane.sh" install "$@"
+        else
+            log_error "Failed to clone repository"
+            return 1
         fi
     fi
     
@@ -852,27 +853,31 @@ create_symlink() {
 # Main command dispatcher
 main() {
     local command="${1:-help}"
+    shift || true
+    
+    # Filter out --branch flag (only used during bootstrap)
+    local filtered_args=()
+    for arg in "$@"; do
+        if [[ "$arg" != --branch=* ]]; then
+            filtered_args+=("$arg")
+        fi
+    done
     
     case "$command" in
         install)
-            shift
-            cmd_install "$@"
+            cmd_install "${filtered_args[@]}"
             ;;
         update)
-            shift
-            cmd_update "$@"
+            cmd_update "${filtered_args[@]}"
             ;;
         uninstall)
-            shift
-            cmd_uninstall "$@"
+            cmd_uninstall "${filtered_args[@]}"
             ;;
         list)
-            shift
-            cmd_list "$@"
+            cmd_list "${filtered_args[@]}"
             ;;
         test)
-            shift
-            cmd_test "$@"
+            cmd_test "${filtered_args[@]}"
             ;;
         help|--help|-h)
             show_usage
