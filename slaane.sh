@@ -12,7 +12,15 @@ done
 # Bootstrap: If running from pipe (curl | bash), download repo first
 SCRIPT_DIR=""
 if [[ -n "${BASH_SOURCE[0]:-}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" 2>/dev/null || true
+    # Resolve symlinks to get the real script location
+    _source="${BASH_SOURCE[0]}"
+    while [[ -L "$_source" ]]; do
+        _dir="$(cd -P "$(dirname "$_source")" && pwd)"
+        _source="$(readlink "$_source")"
+        [[ $_source != /* ]] && _source="$_dir/$_source"
+    done
+    SCRIPT_DIR="$(cd "$(dirname "$_source")" && pwd)" 2>/dev/null || true
+    unset _source _dir
 fi
 
 # Now set -u after we've handled potentially unset variables
@@ -169,16 +177,9 @@ cmd_install() {
             
             if git clone -b "$clone_branch" https://github.com/DaiTengu/slaane.sh.git "$target_dir"; then
                 log_success "Repository cloned to $target_dir"
-                # Update SCRIPT_DIR to point to permanent location
-                SCRIPT_DIR="$target_dir"
-                # Re-source libraries from permanent location
-                source "$SCRIPT_DIR/lib/common.sh"
-                source "$SCRIPT_DIR/lib/module-api.sh"
-                source "$SCRIPT_DIR/lib/module-handlers.sh"
-                source "$SCRIPT_DIR/lib/state-tracking.sh"
-                source "$SCRIPT_DIR/lib/config-handler.sh"
-                init_common
-                init_state_tracking
+                # Re-execute from permanent location with original arguments
+                cd "$target_dir"
+                exec bash "$target_dir/slaane.sh" install "$@"
             else
                 log_error "Failed to clone repository"
                 return 1
