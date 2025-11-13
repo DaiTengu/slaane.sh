@@ -2,7 +2,8 @@
 # Slaane.sh Master Script - Unified interface for install/update/uninstall/list/test
 
 # Parse --branch flag early for bootstrap (before anything else)
-BOOTSTRAP_BRANCH="master"
+# Check environment variable first (set during re-exec from bootstrap)
+BOOTSTRAP_BRANCH="${BOOTSTRAP_BRANCH:-master}"
 for arg in "$@"; do
     if [[ "$arg" == --branch=* ]]; then
         BOOTSTRAP_BRANCH="${arg#*=}"
@@ -72,13 +73,14 @@ if [[ -z "$SCRIPT_DIR" ]] || [[ ! -f "$SCRIPT_DIR/lib/common.sh" ]]; then
     
     # Re-execute the actual slaane.sh script with original arguments
     # Filter out --branch flag as it's only for bootstrap
+    # Pass BOOTSTRAP_BRANCH via environment variable
     NEW_ARGS=()
     for arg in "$@"; do
         if [[ "$arg" != --branch=* ]]; then
             NEW_ARGS+=("$arg")
         fi
     done
-    exec bash "$TEMP_DIR/slaane.sh-${BRANCH_DIR}/slaane.sh" "${NEW_ARGS[@]}"
+    BOOTSTRAP_BRANCH="$BOOTSTRAP_BRANCH" exec bash "$TEMP_DIR/slaane.sh-${BRANCH_DIR}/slaane.sh" "${NEW_ARGS[@]}"
 fi
 
 # Source common libraries
