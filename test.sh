@@ -387,10 +387,9 @@ show_summary() {
     echo -e "${RED}Failed: $TESTS_FAILED${NC}"
     echo ""
     
-    # Write results to file for README update (if DISTRO_NAME is set)
+    # Write results to stdout for Docker capture (if DISTRO_NAME is set)
     if [[ "${TEST_UNINSTALL:-true}" == "true" ]] && [[ -n "${DISTRO_NAME:-}" ]]; then
-        local results_file="${SCRIPT_DIR:-/tmp}/.test-results.tmp"
-        echo "${DISTRO_NAME}|${TESTS_PASSED}|${TESTS_FAILED}" >> "$results_file"
+        echo "${DISTRO_NAME}|${TESTS_PASSED}|${TESTS_FAILED}"
     fi
     
     if [[ $TESTS_FAILED -eq 0 ]]; then

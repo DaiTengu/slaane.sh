@@ -41,6 +41,7 @@ DISTRO_FILTER=""
 MODE_FILTER=""
 INTERACTIVE=false
 ALL_MODES=false
+UPDATE_README=false
 
 show_usage() {
     cat <<EOF
@@ -54,6 +55,7 @@ Options:
     -m, --mode MODE         Test only specific installation mode
     -a, --all-modes         Test all installation modes (default tests only 'default' mode)
     -i, --interactive       Run interactive shell in test container
+    -u, --update-readme     Update README.md with test results
     -l, --list              List available distributions and modes
 
 Modes:
@@ -127,6 +129,10 @@ parse_args() {
                 ;;
             -i|--interactive)
                 INTERACTIVE=true
+                shift
+                ;;
+            -u|--update-readme)
+                UPDATE_README=true
                 shift
                 ;;
             *)
@@ -312,10 +318,7 @@ WORKDIR /home/testuser/slaane.sh
 RUN ${install_cmd}
 
 # Run tests (pass distro name for results tracking)
-RUN DISTRO_NAME="${distro}" TEST_UNINSTALL=true ./test.sh || true
-
-# Copy results file to a known location
-RUN if [ -f /home/testuser/slaane.sh/.test-results.tmp ]; then cat /home/testuser/slaane.sh/.test-results.tmp; fi || true
+RUN DISTRO_NAME="${distro}" ./test.sh || true
 
 # Default command
 CMD ["/bin/bash"]
@@ -481,15 +484,13 @@ main() {
         done
     done
     
-    # Update README with test results if we have results
-    # Skip update if SKIP_README_UPDATE is set (for single-distro testing)
-    if [[ -f "$SCRIPT_DIR/.test-results.tmp" ]] && [[ -s "$SCRIPT_DIR/.test-results.tmp" ]] && [[ "${SKIP_README_UPDATE:-false}" != "true" ]]; then
+    # Update README with test results if --update-readme was specified
+    if [[ "$UPDATE_README" == "true" ]] && [[ -f "$SCRIPT_DIR/.test-results.tmp" ]] && [[ -s "$SCRIPT_DIR/.test-results.tmp" ]]; then
         update_readme_with_results
-        rm -f "$SCRIPT_DIR/.test-results.tmp"
-    elif [[ -f "$SCRIPT_DIR/.test-results.tmp" ]]; then
-        # Clean up temp file even if we skip the update
-        rm -f "$SCRIPT_DIR/.test-results.tmp"
     fi
+    
+    # Clean up temp file
+    rm -f "$SCRIPT_DIR/.test-results.tmp"
     
     # Summary
     echo -e "${BLUE}========================================${NC}"

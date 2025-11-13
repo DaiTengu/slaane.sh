@@ -504,7 +504,9 @@ Quick verification on Rocky Linux 9:
 ```
 
 Tested and verified across multiple distributions:
-- ✅ Rocky Linux 9 (26/26 tests)
+- ✅ Rocky Linux 9 (27/27 tests)
+
+
 
 
 
