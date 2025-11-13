@@ -162,16 +162,16 @@ cmd_install() {
     if [[ "$SCRIPT_DIR" == /tmp/* ]] || [[ "$SCRIPT_DIR" == /var/tmp/* ]]; then
         local target_dir="$HOME/slaane.sh"
         
-        # Clone or remove+reclone if needed
+        # Check if valid installation exists
+        if [[ -f "$target_dir/slaane.sh" ]] && [[ "$force_install" != "true" ]]; then
+            log_info "Using existing repository at $target_dir"
+            exec bash "$target_dir/slaane.sh" install "$@"
+        fi
+        
+        # Remove incomplete/invalid directory if it exists
         if [[ -d "$target_dir" ]]; then
-            if [[ "$force_install" == "true" ]]; then
-                log_info "Removing existing repository at $target_dir..."
-                rm -rf "$target_dir"
-            else
-                log_info "Using existing repository at $target_dir"
-                # Re-execute from permanent location
-                exec bash "$target_dir/slaane.sh" install "$@"
-            fi
+            log_info "Removing incomplete repository at $target_dir..."
+            rm -rf "$target_dir"
         fi
         
         # Clone the repository
@@ -180,7 +180,6 @@ cmd_install() {
         
         if git clone -b "$clone_branch" https://github.com/DaiTengu/slaane.sh.git "$target_dir"; then
             log_success "Repository cloned to $target_dir"
-            # Re-execute from permanent location
             exec bash "$target_dir/slaane.sh" install "$@"
         else
             log_error "Failed to clone repository"
