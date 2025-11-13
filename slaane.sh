@@ -598,6 +598,22 @@ cmd_uninstall() {
         for mod in "${installed_modules[@]}"; do
             log_info "Uninstalling module: $mod"
             uninstall_module_generic "$mod" || log_warning "Failed to uninstall: $mod"
+            
+            # If purging, also remove config files
+            if [[ "$purge" == "true" ]]; then
+                local mod_file="$SCRIPT_DIR/modules/$mod.sh"
+                if [[ -f "$mod_file" ]] && extract_embedded_metadata "$mod_file"; then
+                    if [[ -n "${MODULE_CONFIG_FILES:-}" ]]; then
+                        for config_file in $MODULE_CONFIG_FILES; do
+                            if [[ -e "$config_file" ]]; then
+                                rm -rf "$config_file"
+                                log_info "Removed config: $config_file"
+                            fi
+                        done
+                    fi
+                fi
+            fi
+            
             untrack_module "$mod"
         done
         
