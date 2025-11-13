@@ -504,7 +504,16 @@ Quick verification on Rocky Linux 9:
 ```
 
 Tested and verified across multiple distributions:
+- ✅ Arch Linux (24/24 tests)
+- ✅ Debian 11 (27/27 tests)
+- ✅ Debian 12 (25/25 tests)
+- ✅ Fedora 38 (27/27 tests)
+- ✅ Fedora 39 (27/27 tests)
+- ✅ Rocky Linux 8 (25/25 tests)
 - ✅ Rocky Linux 9 (27/27 tests)
+- ✅ Ubuntu 20.04 (27/27 tests)
+- ✅ Ubuntu 22.04 (27/27 tests)
+
 
 
 
