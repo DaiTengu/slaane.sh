@@ -6,7 +6,19 @@
 
 - [ ] **The Serpentine Update**: Craft `slaane.sh update --self` to slither the latest corruption from GitHub without devouring local modifications—shed the old skin while preserving the heretical customizations beneath
 - [ ] **Python Incarnation**: Bind a specific Python vessel during the summoning ritual (e.g., `--python-version=3.12`)—for some daemons require particular hosts
+
+## The Proving Grounds
+
+Docker containers are hollow vessels—minimal, sterile, lacking the chaos of real systems. True validation requires flesh and blood machines.
+
+- [ ] **AWS Summoning Circles**: Spin up EC2 instances on-demand for realistic testing—per-second billing means the sacrifice is measured in pennies, not gold
+  - Rocky/Alma Linux (RHEL bloodline)
+  - Ubuntu/Debian (the hive worlds)
+  - Arch Linux (chaos undivided)
+  - Gentoo (the truly damned)
 - [ ] **The Automated Inquisition**: GitHub Actions pipeline to torment every commit—the Machine Spirit shall validate all changes before they corrupt the masses
+- [ ] **test-aws.sh**: A script to conjure instances, deploy the corruption, verify the transformation, and banish the vessels back to the void
+- [ ] **Multi-Architecture Trials**: Test across x86_64 and aarch64 (ARM)—the corruption must spread to all machine spirits
 
 ## Terminal Sorcery
 

@@ -65,8 +65,14 @@ install() {
 | `MODULE_CORE` | No | Set to `true` if failure should abort install |
 | `MODULE_OPTIONAL` | No | Set to `true` if requires explicit flag to install |
 | `MODULE_CONFIG` | No | Config file to install to $HOME |
+| `MODULE_PKG_NAME` | No | Package name for system package manager install |
+| `MODULE_PIP` | No | Package name for pip install --user |
+| `MODULE_CHECK_FILE` | No | Specific file to check for is_installed |
+| `MODULE_NOTE` | No | Warning message to display before install |
 
-*At least one of `MODULE_DIR`, `MODULE_BIN`, or a custom `install()` function is required.
+*At least one of `MODULE_DIR`, `MODULE_BIN`, `MODULE_CHECK_FILE`, or a custom `install()` function is required.
+
+**Note on is_installed checks:** The framework uses AND logic - if multiple check variables are defined (MODULE_BIN, MODULE_DIR, MODULE_CHECK_FILE), ALL must pass for the module to be considered installed.
 
 ## Optional Functions
 

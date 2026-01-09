@@ -27,6 +27,7 @@ discover_modules() {
 clear_module_vars() {
     unset MODULE_DIR MODULE_REPO MODULE_BIN MODULE_SCRIPT
     unset MODULE_OPTIONAL MODULE_CORE MODULE_CONFIG
+    unset MODULE_PKG_NAME MODULE_PIP MODULE_CHECK_FILE MODULE_NOTE
     unset -f install post_install update uninstall is_installed
 }
 
@@ -50,10 +51,81 @@ get_module_desc() {
 }
 
 # ============================================================================
+# Installation Helpers
+# ============================================================================
+
+# Install package via system package manager
+install_system_package() {
+    local pkg="$1"
+    
+    # Check if already installed
+    if command_exists "$pkg" 2>/dev/null; then
+        return 0
+    fi
+    
+    # Need sudo
+    if ! prompt_for_sudo "install $pkg"; then
+        return 1
+    fi
+    
+    RUN_AS_ROOT_OPERATION="install $pkg" run_as_root $PKG_INSTALL "$pkg"
+}
+
+# Install package via pip
+install_pip_package() {
+    local pkg="$1"
+    local pip_cmd=""
+    
+    if command_exists pip3; then
+        pip_cmd="pip3"
+    elif command_exists pip; then
+        pip_cmd="pip"
+    else
+        log_error "pip not found"
+        return 1
+    fi
+    
+    $pip_cmd install --user "$pkg"
+}
+
+# Update pip package
+update_pip_package() {
+    local pkg="$1"
+    local pip_cmd=""
+    
+    if command_exists pip3; then
+        pip_cmd="pip3"
+    elif command_exists pip; then
+        pip_cmd="pip"
+    else
+        return 1
+    fi
+    
+    $pip_cmd install --user --upgrade "$pkg"
+}
+
+# Uninstall pip package
+uninstall_pip_package() {
+    local pkg="$1"
+    local pip_cmd=""
+    
+    if command_exists pip3; then
+        pip_cmd="pip3"
+    elif command_exists pip; then
+        pip_cmd="pip"
+    else
+        return 1
+    fi
+    
+    $pip_cmd uninstall -y "$pkg"
+}
+
+# ============================================================================
 # Installation Logic
 # ============================================================================
 
 # Check if module is installed
+# Uses AND logic - all defined checks must pass
 check_installed() {
     local name="$1"
     
@@ -65,19 +137,21 @@ check_installed() {
         return $?
     fi
     
-    # Check binary if specified
-    if [[ -n "${MODULE_BIN:-}" ]]; then
-        command_exists "$MODULE_BIN"
-        return $?
+    # AND all defined checks together
+    if [[ -n "${MODULE_BIN:-}" ]] && ! command_exists "$MODULE_BIN"; then
+        return 1
     fi
     
-    # Check directory if specified
-    if [[ -n "${MODULE_DIR:-}" ]]; then
-        [[ -d "$MODULE_DIR" ]]
-        return $?
+    if [[ -n "${MODULE_DIR:-}" ]] && [[ ! -d "$MODULE_DIR" ]]; then
+        return 1
     fi
     
-    return 1
+    if [[ -n "${MODULE_CHECK_FILE:-}" ]] && [[ ! -f "$MODULE_CHECK_FILE" ]]; then
+        return 1
+    fi
+    
+    # At least one check must be defined
+    [[ -n "${MODULE_BIN:-}" ]] || [[ -n "${MODULE_DIR:-}" ]] || [[ -n "${MODULE_CHECK_FILE:-}" ]]
 }
 
 # Install a module
@@ -100,9 +174,17 @@ install_module() {
     
     log_info "Installing $name..."
     
+    # Print module note if defined
+    if [[ -n "${MODULE_NOTE:-}" ]]; then
+        log_warning "$MODULE_NOTE"
+    fi
+    
     # Custom install function takes priority
     if declare -f install &>/dev/null; then
         if install; then
+            if declare -f post_install &>/dev/null; then
+                post_install || log_warning "post_install hook had issues"
+            fi
             log_success "$name installed"
             return 0
         else
@@ -111,10 +193,33 @@ install_module() {
         fi
     fi
     
-    # Default: git clone if repo specified
+    # Install system package if specified
+    if [[ -n "${MODULE_PKG_NAME:-}" ]]; then
+        if install_system_package "${MODULE_PKG_NAME}"; then
+            # Continue to other install methods (e.g., nano needs pkg + git clone)
+            :
+        else
+            log_warning "Package ${MODULE_PKG_NAME} not installed"
+        fi
+    fi
+    
+    # Install pip package if specified
+    if [[ -n "${MODULE_PIP:-}" ]]; then
+        if install_pip_package "${MODULE_PIP}"; then
+            if declare -f post_install &>/dev/null; then
+                post_install || log_warning "post_install hook had issues"
+            fi
+            log_success "$name installed"
+            return 0
+        else
+            log_error "Failed to install ${MODULE_PIP} via pip"
+            return 1
+        fi
+    fi
+    
+    # Git clone if repo specified
     if [[ -n "${MODULE_REPO:-}" ]] && [[ -n "${MODULE_DIR:-}" ]]; then
         if git clone --depth=1 "$MODULE_REPO" "$MODULE_DIR"; then
-            # Run post_install if defined
             if declare -f post_install &>/dev/null; then
                 post_install || log_warning "post_install hook had issues"
             fi
@@ -129,6 +234,9 @@ install_module() {
     # Download script if specified
     if [[ -n "${MODULE_SCRIPT:-}" ]]; then
         if curl -fsSL "$MODULE_SCRIPT" | bash; then
+            if declare -f post_install &>/dev/null; then
+                post_install || log_warning "post_install hook had issues"
+            fi
             log_success "$name installed"
             return 0
         else
@@ -157,6 +265,17 @@ update_module() {
     # Custom update function takes priority
     if declare -f update &>/dev/null; then
         if update; then
+            log_success "$name updated"
+            return 0
+        else
+            log_error "$name update failed"
+            return 1
+        fi
+    fi
+    
+    # Update pip package if specified
+    if [[ -n "${MODULE_PIP:-}" ]]; then
+        if update_pip_package "${MODULE_PIP}"; then
             log_success "$name updated"
             return 0
         else
@@ -195,6 +314,17 @@ uninstall_module() {
     # Custom uninstall function takes priority
     if declare -f uninstall &>/dev/null; then
         if uninstall; then
+            log_success "$name uninstalled"
+            return 0
+        else
+            log_error "$name uninstall failed"
+            return 1
+        fi
+    fi
+    
+    # Uninstall pip package if specified
+    if [[ -n "${MODULE_PIP:-}" ]]; then
+        if uninstall_pip_package "${MODULE_PIP}"; then
             log_success "$name uninstalled"
             return 0
         else
