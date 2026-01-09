@@ -453,7 +453,10 @@ Should you wish to purge the Dark Prince's gifts from your system:
 
 ```bash
 # Banish all modules and restore your shell
-slaane.sh uninstall --all
+slaane.sh uninstall --module all
+
+# Nuclear option: remove everything including slaane.sh itself
+slaane.sh uninstall --purge
 
 # The ritual removes:
 # - All installed modules (~/.bash_it, ~/.local/share/blesh, ~/.fzf, etc.)
@@ -500,16 +503,8 @@ Quick verification on Rocky Linux 9:
 ./test-docker.sh --distro rockylinux:9
 ```
 
-Tested and verified across multiple distributions:
-- ✅ Arch Linux (24/24 tests)
-- ✅ Debian 11 (27/27 tests)
-- ✅ Debian 12 (25/25 tests)
-- ✅ Fedora 38 (27/27 tests)
-- ✅ Fedora 39 (27/27 tests)
-- ✅ Rocky Linux 8 (25/25 tests)
-- ✅ Rocky Linux 9 (27/27 tests)
-- ✅ Ubuntu 20.04 (27/27 tests)
-- ✅ Ubuntu 22.04 (27/27 tests)
+Primary test target:
+- ✅ Rocky Linux 9
 
 
 ## Contributing
