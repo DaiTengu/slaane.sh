@@ -11,37 +11,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Installation flow**: Simplified installation and uninstallation instructions for maximum ease of use
 - **Uninstallation guide**: Enhanced with `slaane.sh uninstall --all` command and selective banishment options
 
-## [0.2.0] - Modular API/SDK System
+## [0.2.0] - The Simplified Grimoire
 
 ### Added
-- **Master script (`slaane.sh`)**: Unified interface for all operations (install, update, uninstall, list, test)
-- **Modular API/SDK system**: Self-describing modules with metadata-driven installation
-- **Module discovery**: Automatic discovery of modules in `modules/` directory
-- **Generic handlers**: Centralized install/update/uninstall/test operations based on module metadata
-- **Installation state tracking**: Explicit tracking of installed modules in `~/.slaane.sh/installed-modules`
-- **Dependency resolution**: Automatic dependency resolution with cycle detection
-- **MIT License**: Project is now licensed under the MIT License
-- **Module metadata**: Embedded metadata format or separate `.conf` files
-- **Standardized module interface**: All modules use `main_module()`, `update_module()`, `uninstall_module()`, `check_module_installed()`
-- **Core vs default modules**: `MODULE_IS_CORE` flag for critical modules
-- **Module API documentation**: Comprehensive `docs/MODULE_API.md` specification
-- **Update subcommand**: `slaane.sh update` with component-specific or repository-wide updates
-- **Uninstall subcommand**: `slaane.sh uninstall` with module-specific or full cleanup
-- **List subcommand**: `slaane.sh list` to view available or installed modules
-- **Test subcommand**: `slaane.sh test` using generic test handlers
+- **Master script (`slaane.sh`)**: A single dark altar for all corruption rituals (install, update, uninstall, list, test)
+- **Declarative module system**: Modules now manifest through simple variable declarations (`MODULE_DIR`, `MODULE_REPO`, etc.) with optional hook functions for custom heresies
+- **Module discovery**: The warp automatically reveals all modules dwelling in `modules/`
+- **Generic handlers**: Centralized summoning rituals consolidated into the tome `lib/modules.sh`
+- **MIT License**: The dark knowledge is now freely shared with all seekers
+- **Core vs optional modules**: `MODULE_CORE` marks critical blessings; `MODULE_OPTIONAL` marks expendable servants
+- **Module API documentation**: The sacred `docs/MODULE_API.md` now speaks plainly to initiates
+- **Ritual subcommands**: `update` refreshes corruption, `uninstall` banishes modules, `list` reveals the pantheon, `test` verifies the bindings
 
 ### Changed
-- **Module naming**: Removed prefix numbers (e.g., `10-bash-it.sh` → `bash-it.sh`)
-- **Module structure**: All modules now follow standardized API with embedded metadata
-- **Installation flow**: Now uses generic handlers and module discovery
-- **Test suite**: Updated to use generic test handlers and module discovery
-- **Docker tests**: Updated to use `slaane.sh install` instead of `install.sh`
-- **Documentation**: Updated README with master script commands and new architecture
-- **Global availability**: `slaane.sh` command now available system-wide via `~/.local/bin` symlink
+- **Module naming**: Stripped the numerical prefixes—`10-bash-it.sh` becomes simply `bash-it.sh`
+- **Module structure**: Verbose incantations purged; modules now wield declarative variables with optional hooks
+- **Installation flow**: Generic handlers channel all manifestations through unified rites
+- **Test suite**: Verification rituals now properly distinguish critical failures from optional sacrifices
+- **Docker testing**: Containers now receive proper preparations (procps-ng, locale bindings) for blesh operation
+- **Documentation**: README updated with new command structure and architectural revelations
+- **Global availability**: `slaane.sh` now answers from anywhere via `~/.local/bin` symlink
 
 ### Removed
-- **Old module format**: All modules recreated in new standardized format
-- **Hardcoded module lists**: Replaced with dynamic discovery from metadata
+- **Bloated module format**: The old 60-180 line monstrosities have been reduced to 5-77 lines of elegant corruption
+- **Hardcoded module lists**: Replaced with dynamic discovery—the warp knows its own
 
 ## [0.1.x] - Initial Release
 

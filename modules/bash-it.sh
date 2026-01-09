@@ -1,235 +1,56 @@
 #!/usr/bin/env bash
-# Module: bash-it installation
-# Installs bash-it framework and configures enabled components
+# bash-it - Bash framework for aliases, completions, and themes
 
-# Metadata: START
-MODULE_NAME="bash-it"
-MODULE_DESCRIPTION="Bash-it framework for shell customization"
-MODULE_ENABLED_BY_DEFAULT="true"
-MODULE_IS_CORE="true"
-MODULE_DEPENDS=""
-MODULE_INSTALL_METHOD="git_clone"
-MODULE_INSTALL_DIRS="$HOME/.bash_it"
-MODULE_INSTALL_REPO="https://github.com/Bash-it/bash-it.git"
-MODULE_INSTALL_ARGS="--depth=1"
-MODULE_UPDATE_METHOD="component_command"
-MODULE_UPDATE_DIR="$HOME/.bash_it"
-MODULE_UNINSTALL_DIRS="$HOME/.bash_it"
-MODULE_CONFIG_FILES=""
-MODULE_TEST_DIRS="$HOME/.bash_it"
-MODULE_TEST_FILES="$HOME/.bash_it/bash_it.sh"
-# Metadata: END
+MODULE_DIR="$HOME/.bash_it"
+MODULE_REPO="https://github.com/Bash-it/bash-it.git"
+MODULE_CORE=true
 
-# Bootstrap module environment
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source "$SCRIPT_DIR/lib/module-api.sh"
-bootstrap_module
-
-BASH_IT_DIR="$HOME/.bash_it"
-
-check_module_installed() {
-    [[ -d "$BASH_IT_DIR" ]] && [[ -f "$BASH_IT_DIR/bash_it.sh" ]]
-}
-
-enable_bash_it_component() {
-    local component_type="$1"  # alias, plugin, or completion
-    local component_name="$2"
+post_install() {
+    # Run bash-it silent install (doesn't modify bashrc - we handle that)
+    bash "$MODULE_DIR/install.sh" --silent --no-modify-config
     
-    if ! check_module_installed; then
-        log_error "bash-it is not installed"
-        return 1
+    # Configure bash-it components from our config
+    local components_file="$SCRIPT_DIR/config/bash-it-components"
+    if [[ -f "$components_file" ]]; then
+        configure_bash_it_components "$components_file"
     fi
     
-    # Determine directory name (completion is singular, aliases/plugins are plural)
-    local dir_name=""
-    case "$component_type" in
-        alias)
-            dir_name="aliases"
-            ;;
-        plugin)
-            dir_name="plugins"
-            ;;
-        completion)
-            dir_name="completion"
-            ;;
-        *)
-            log_error "Unknown component type: $component_type"
-            return 1
-            ;;
-    esac
-    
-    # Determine file extension (aliases uses plural, plugin/completion use singular)
-    local file_ext=""
-    case "$component_type" in
-        alias)
-            file_ext="aliases"
-            ;;
-        plugin)
-            file_ext="plugin"
-            ;;
-        completion)
-            file_ext="completion"
-            ;;
-    esac
-    
-    # Check if component exists
-    local available_file="$BASH_IT_DIR/$dir_name/available/${component_name}.${file_ext}.bash"
-    if [[ ! -f "$available_file" ]]; then
-        log_warning "Component not found: ${component_type}/${component_name}"
-        return 1
-    fi
-    
-    # Check if already enabled (enabled files have pattern: priority---name.extension.bash)
-    local enabled_dir="$BASH_IT_DIR/enabled"
-    if ls "$enabled_dir"/*"---${component_name}.${file_ext}.bash" &>/dev/null; then
-        log_info "Component already enabled: ${component_type}/${component_name}"
-        return 0
-    fi
-    
-    # Enable using bash-it command
-    log_info "Enabling ${component_type}: $component_name"
-    bash -c "source '$BASH_IT_DIR/bash_it.sh' && bash-it enable ${component_type} ${component_name}" &>/dev/null
-    
-    if [[ $? -eq 0 ]]; then
-        log_success "Enabled ${component_type}: $component_name"
-        return 0
-    else
-        log_warning "Failed to enable ${component_type}: $component_name"
-        return 1
+    # Install our custom liquidprompt theme fix
+    local theme_fix="$SCRIPT_DIR/config/liquidprompt.theme.bash"
+    if [[ -f "$theme_fix" ]]; then
+        cp "$theme_fix" "$MODULE_DIR/themes/liquidprompt/liquidprompt.theme.bash"
     fi
 }
 
 configure_bash_it_components() {
-    log_info "Configuring bash-it components..."
+    local config_file="$1"
+    local current_section=""
     
-    local config_file="$SCRIPT_DIR/config/bash-it-components"
-    
-    if [[ ! -f "$config_file" ]]; then
-        log_warning "Component configuration file not found: $config_file"
-        log_info "Skipping component configuration"
-        return 0
-    fi
-    
-    local component_type=""
-    local enabled_count=0
-    local failed_count=0
+    # Source bash-it to get the bash-it function
+    export BASH_IT="$MODULE_DIR"
+    source "$MODULE_DIR/bash_it.sh" 2>/dev/null || true
     
     while IFS= read -r line || [[ -n "$line" ]]; do
-        # Skip empty lines and comments
-        [[ -z "$line" ]] && continue
-        [[ "$line" =~ ^# ]] && continue
+        # Skip comments and empty lines
+        [[ "$line" =~ ^[[:space:]]*# ]] && continue
+        [[ -z "${line// }" ]] && continue
         
         # Check for section headers
-        if [[ "$line" =~ ^\[(.*)\]$ ]]; then
-            component_type="${BASH_REMATCH[1]}"
-            log_info "Processing ${component_type}s..."
+        if [[ "$line" =~ ^\[([a-z]+)\] ]]; then
+            current_section="${BASH_REMATCH[1]}"
             continue
         fi
         
-        # Enable component
-        if [[ -n "$component_type" ]]; then
-            if enable_bash_it_component "$component_type" "$line"; then
-                ((enabled_count++))
-            else
-                ((failed_count++))
-            fi
+        # Enable component using bash-it function
+        if [[ -n "$current_section" ]] && [[ -n "$line" ]]; then
+            local component="${line// /}"
+            bash-it enable "$current_section" "$component" 2>/dev/null || true
         fi
     done < "$config_file"
-    
-    log_success "Enabled $enabled_count components ($failed_count skipped/failed)"
-    return 0
 }
 
-install_custom_liquidprompt_theme() {
-    log_info "Installing custom liquidprompt theme..."
-    
-    if ! check_module_installed; then
-        log_error "bash-it is not installed"
-        return 1
-    fi
-    
-    local theme_dir="$BASH_IT_DIR/themes/liquidprompt"
-    local custom_theme="$SCRIPT_DIR/config/liquidprompt.theme.bash"
-    local target_theme="$theme_dir/liquidprompt.theme.bash"
-    
-    if [[ ! -f "$custom_theme" ]]; then
-        log_warning "Custom liquidprompt theme not found: $custom_theme"
-        log_info "Skipping custom theme installation"
-        return 0
-    fi
-    
-    # Ensure theme directory exists
-    if [[ ! -d "$theme_dir" ]]; then
-        log_info "Creating liquidprompt theme directory..."
-        mkdir -p "$theme_dir" || {
-            log_warning "Failed to create theme directory: $theme_dir"
-            log_info "Skipping custom theme installation"
-            return 0
-        }
-    fi
-    
-    # Backup existing theme if it exists and we're not forcing
-    if [[ -f "$target_theme" ]] && [[ "${FORCE_INSTALL:-}" != "true" ]]; then
-        local backup_file="${target_theme}.pre-slaanesh-$(date +%Y%m%d_%H%M%S)"
-        log_info "Backing up existing theme to: $(basename "$backup_file")"
-        cp "$target_theme" "$backup_file"
-    fi
-    
-    # Copy custom theme
-    log_info "Installing custom liquidprompt theme (with git branch display fix)..."
-    if cp "$custom_theme" "$target_theme"; then
-        log_success "Custom liquidprompt theme installed successfully"
-        return 0
-    else
-        log_error "Failed to install custom liquidprompt theme"
-        return 1
-    fi
+update() {
+    export BASH_IT="$MODULE_DIR"
+    source "$MODULE_DIR/bash_it.sh" 2>/dev/null || true
+    bash-it update stable
 }
-
-# Main module execution
-main_module() {
-    # Use generic git_clone handler
-    if ! install_via_git_clone "$MODULE_NAME"; then
-        return 1
-    fi
-    
-    # Run bash-it installer (non-interactive)
-    log_info "Running bash-it installation..."
-    if ! bash "$BASH_IT_DIR/install.sh" --silent --no-modify-config; then
-        log_error "bash-it installation failed"
-        return 1
-    fi
-    
-    # Configure components
-    if ! configure_bash_it_components; then
-        log_warning "Some components failed to enable, but bash-it is installed"
-    fi
-    
-    # Install custom liquidprompt theme after components are configured
-    if ! install_custom_liquidprompt_theme; then
-        log_warning "Custom liquidprompt theme installation failed, but continuing..."
-    fi
-    
-    log_success "bash-it installed successfully"
-    return 0
-}
-
-# Update module
-update_module() {
-    if [[ ! -d "$BASH_IT_DIR" ]]; then
-        log_error "bash-it is not installed"
-        return 1
-    fi
-    
-    if [[ -f "$BASH_IT_DIR/bin/bash-it" ]]; then
-        log_info "Running bash-it update..."
-        "$BASH_IT_DIR/bin/bash-it" update
-        return $?
-    else
-        # Fall back to git pull
-        log_info "bash-it command not found, using git pull..."
-        update_via_git_pull "$MODULE_NAME"
-        return $?
-    fi
-}
-

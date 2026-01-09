@@ -1,550 +1,364 @@
-# Slaane.sh Module API Specification
+# Slaane.sh Module API
 
-This document defines the API for creating modules for Slaane.sh. Modules are self-describing components that can be installed, updated, uninstalled, and tested automatically by the core system.
+This document explains how to create modules for Slaane.sh. The system is designed to be **simple** - most modules are just a few lines of configuration.
 
-## Table of Contents
+## Quick Start
 
-- [Module Structure](#module-structure)
-- [Metadata Format](#metadata-format)
-- [Module Interface](#module-interface)
-- [Installation Methods](#installation-methods)
-- [Update Methods](#update-methods)
-- [Dependencies](#dependencies)
-- [Configuration Files](#configuration-files)
-- [Testing](#testing)
-- [Examples](#examples)
+### Simplest Module (3 lines)
 
-## Module Structure
-
-### File Naming
-
-- Module files must be named `<module-name>.sh` where `<module-name>` matches the `MODULE_NAME` in metadata
-- Examples: `bash-it.sh`, `zoxide.sh`, `pyenv.sh`
-- **No prefix numbers** - dependencies handle install order
-- Module name must match filename (without `.sh` extension)
-
-### File Organization
-
-Each module consists of:
-- `modules/<name>.sh` - Module script file (required)
-- `modules/<name>.conf` - Module metadata file (optional, can be embedded in script)
-
-## Metadata Format
-
-Modules must declare metadata that describes their installation, update, uninstall, and testing requirements. Metadata can be provided in two formats:
-
-### Format A: Embedded Metadata (Recommended)
-
-Metadata is embedded directly in the module script file between `# Metadata: START` and `# Metadata: END` markers:
+A module that just clones a git repo:
 
 ```bash
 #!/usr/bin/env bash
-# Module: bash-it installation
-# Metadata: START
-MODULE_NAME="bash-it"
-MODULE_DESCRIPTION="Bash-it framework for shell customization"
-MODULE_ENABLED_BY_DEFAULT="true"
-MODULE_IS_CORE="true"
-MODULE_DEPENDS=""
-MODULE_INSTALL_METHOD="git_clone"
-MODULE_INSTALL_DIRS="$HOME/.bash_it"
-MODULE_INSTALL_REPO="https://github.com/Bash-it/bash-it.git"
-MODULE_INSTALL_ARGS="--depth=1"
-MODULE_UPDATE_METHOD="component_command"
-MODULE_UPDATE_DIR="$HOME/.bash_it"
-MODULE_UNINSTALL_DIRS="$HOME/.bash_it"
-MODULE_CONFIG_FILES=""
-MODULE_TEST_DIRS="$HOME/.bash_it"
-MODULE_TEST_FILES="$HOME/.bash_it/bash_it.sh"
-# Metadata: END
+# mymodule - Description of what it does
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source "$SCRIPT_DIR/lib/common.sh"
-source "$SCRIPT_DIR/lib/module-handlers.sh"
-# ... rest of module code
+MODULE_DIR="$HOME/.mymodule"
+MODULE_REPO="https://github.com/user/repo.git"
 ```
 
-### Format B: Separate Configuration File
+That's it. The framework handles:
+- Cloning the repo
+- Checking if already installed (`[[ -d $MODULE_DIR ]]`)
+- Updates (`git pull`)
+- Uninstall (`rm -rf $MODULE_DIR`)
 
-Metadata can be in a separate `.conf` file:
+### Module with Post-Install Hook
 
-```bash
-# modules/bash-it.conf
-MODULE_NAME="bash-it"
-MODULE_DESCRIPTION="Bash-it framework for shell customization"
-# ... (all other metadata fields)
-```
-
-**Note:** If both embedded metadata and `.conf` file exist, the `.conf` file takes precedence.
-
-### Required Metadata Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `MODULE_NAME` | string | Module name (must match filename without `.sh`) |
-| `MODULE_DESCRIPTION` | string | Human-readable description |
-| `MODULE_ENABLED_BY_DEFAULT` | boolean | Whether module is enabled by default (`true`/`false`) |
-| `MODULE_IS_CORE` | boolean | Whether module is core (failure causes installer to fail) (`true`/`false`) |
-| `MODULE_INSTALL_METHOD` | string | Installation method (see [Installation Methods](#installation-methods)) |
-| `MODULE_UNINSTALL_DIRS` | string | Space-separated list of directories to remove on uninstall |
-
-### Optional Metadata Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `MODULE_DEPENDS` | string | Space-separated list of module names this module depends on |
-| `MODULE_INSTALL_DIRS` | string | Space-separated list of directories created during install |
-| `MODULE_INSTALL_REPO` | string | Git repository URL (for `git_clone` method) |
-| `MODULE_INSTALL_ARGS` | string | Additional arguments for git clone |
-| `MODULE_UPDATE_METHOD` | string | Update method (see [Update Methods](#update-methods)) |
-| `MODULE_UPDATE_DIR` | string | Directory to update (for `git_pull` method) |
-| `MODULE_CONFIG_FILES` | string | Space-separated list of config files installed by module |
-| `MODULE_TEST_DIRS` | string | Space-separated list of directories to check for existence |
-| `MODULE_TEST_FILES` | string | Space-separated list of files to check for existence |
-| `MODULE_TEST_BINARIES` | string | Space-separated list of binaries to check for in PATH |
-| `MODULE_TEST_COMMAND` | string | Shell command to run for testing (returns 0 on success) |
-
-## Module Interface
-
-All modules must implement a standardized interface using the same function names.
-
-### Required Functions
-
-#### `main_module()`
-
-Main installation function. Called when module is installed.
+Some tools need a setup step after cloning:
 
 ```bash
-main_module() {
-    # Module-specific installation logic
-    # Has access to all metadata variables: $MODULE_NAME, $MODULE_INSTALL_DIRS, etc.
-    # Can call generic handlers or implement custom logic
-    # Return 0 on success, 1 on failure
+#!/usr/bin/env bash
+# fzf - Fuzzy finder
+
+MODULE_DIR="$HOME/.fzf"
+MODULE_REPO="https://github.com/junegunn/fzf.git"
+
+post_install() {
+    "$MODULE_DIR/install" --bin --no-update-rc
 }
 ```
 
-**Context:** All metadata variables are available as environment variables when this function is called.
+### Module with Binary Check
 
-### Optional Functions
-
-#### `update_module()`
-
-Custom update function. Only needed if `MODULE_UPDATE_METHOD="custom"`.
+For tools installed to PATH (not a directory):
 
 ```bash
-update_module() {
-    # Custom update logic
-    # Has access to all metadata variables
-    # Return 0 on success, 1 on failure
+#!/usr/bin/env bash
+# zoxide - Smart cd replacement
+
+MODULE_BIN="zoxide"
+
+install() {
+    # Your custom installation logic
+    curl -sSfL https://example.com/install.sh | bash
 }
 ```
 
-#### `uninstall_module()`
+## Module Variables
 
-Custom uninstall function. Only needed if generic uninstall handler is insufficient.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MODULE_DIR` | No* | Directory where module is installed |
+| `MODULE_REPO` | No* | Git repository URL to clone |
+| `MODULE_BIN` | No* | Binary name to check in PATH |
+| `MODULE_SCRIPT` | No | URL of installer script (curl\|bash) |
+| `MODULE_CORE` | No | Set to `true` if failure should abort install |
+| `MODULE_OPTIONAL` | No | Set to `true` if requires explicit flag to install |
+| `MODULE_CONFIG` | No | Config file to install to $HOME |
+
+*At least one of `MODULE_DIR`, `MODULE_BIN`, or a custom `install()` function is required.
+
+## Optional Functions
+
+Override these only when the defaults don't work:
+
+### `is_installed()`
+
+Custom check for whether module is installed.
 
 ```bash
-uninstall_module() {
-    # Custom uninstall logic
-    # Has access to all metadata variables
-    # Return 0 on success, 1 on failure
+is_installed() {
+    [[ -f "$HOME/.mymodule/bin/mytool" ]] && command_exists mytool
 }
 ```
 
-#### `check_module_installed()`
+**Default behavior:**
+- If `MODULE_BIN` set: `command_exists $MODULE_BIN`
+- If `MODULE_DIR` set: `[[ -d $MODULE_DIR ]]`
 
-Check if module is installed. Used for testing and verification.
+### `install()`
+
+Full custom installation logic.
 
 ```bash
-check_module_installed() {
-    # Check if component is installed
-    # Return 0 if installed, 1 if not
+install() {
+    # Try binary download first
+    if download_binary; then
+        return 0
+    fi
+    # Fall back to package manager
+    run_as_root $PKG_INSTALL mypackage
 }
 ```
 
-## Installation Methods
+**Default behavior:** `git clone $MODULE_REPO $MODULE_DIR`
 
-The `MODULE_INSTALL_METHOD` field determines how the module is installed:
+### `post_install()`
 
-### `git_clone`
-
-Clone a git repository to a directory.
-
-**Required fields:**
-- `MODULE_INSTALL_REPO` - Git repository URL
-- `MODULE_INSTALL_DIRS` - Target directory (usually one directory)
-
-**Optional fields:**
-- `MODULE_INSTALL_ARGS` - Additional git clone arguments (e.g., `--depth=1`)
-
-**Example:**
-```bash
-MODULE_INSTALL_METHOD="git_clone"
-MODULE_INSTALL_REPO="https://github.com/Bash-it/bash-it.git"
-MODULE_INSTALL_DIRS="$HOME/.bash_it"
-MODULE_INSTALL_ARGS="--depth=1"
-```
-
-### `pip`
-
-Install via pip (Python package manager).
-
-**Required fields:**
-- `MODULE_INSTALL_DIRS` - Directory where pip installs (usually `$HOME/.local`)
-
-**Example:**
-```bash
-MODULE_INSTALL_METHOD="pip"
-MODULE_INSTALL_DIRS="$HOME/.local"
-```
-
-### `package_manager`
-
-Install via system package manager (apt, dnf, pacman, etc.).
-
-**Required fields:**
-- None (package name is derived from module name or specified in `main_module()`)
-
-**Example:**
-```bash
-MODULE_INSTALL_METHOD="package_manager"
-```
-
-### `download_script`
-
-Download and run an installer script (curl|bash pattern).
-
-**Required fields:**
-- `MODULE_INSTALL_REPO` - URL to installer script
-
-**Example:**
-```bash
-MODULE_INSTALL_METHOD="download_script"
-MODULE_INSTALL_REPO="https://raw.githubusercontent.com/user/repo/main/install.sh"
-```
-
-### `custom`
-
-Use module's custom `main_module()` function for installation.
-
-**Required fields:**
-- None (module handles installation entirely in `main_module()`)
-
-**Example:**
-```bash
-MODULE_INSTALL_METHOD="custom"
-```
-
-## Update Methods
-
-The `MODULE_UPDATE_METHOD` field determines how the module is updated:
-
-### `git_pull`
-
-Run `git pull` in the install directory.
-
-**Required fields:**
-- `MODULE_UPDATE_DIR` - Directory containing git repository
-
-**Example:**
-```bash
-MODULE_UPDATE_METHOD="git_pull"
-MODULE_UPDATE_DIR="$HOME/.bash_it"
-```
-
-### `pip_upgrade`
-
-Run `pip install --upgrade` for the package.
-
-**Required fields:**
-- None (package name derived from module or specified in `update_module()`)
-
-**Example:**
-```bash
-MODULE_UPDATE_METHOD="pip_upgrade"
-```
-
-### `component_command`
-
-Run the component's own update command.
-
-**Required fields:**
-- None (command is component-specific, e.g., `bash-it update`)
-
-**Example:**
-```bash
-MODULE_UPDATE_METHOD="component_command"
-```
-
-### `reinstall`
-
-Remove and re-run installation.
-
-**Required fields:**
-- None
-
-**Example:**
-```bash
-MODULE_UPDATE_METHOD="reinstall"
-```
-
-### `custom`
-
-Use module's custom `update_module()` function.
-
-**Required fields:**
-- None
-
-**Example:**
-```bash
-MODULE_UPDATE_METHOD="custom"
-```
-
-### `none`
-
-Component doesn't support updates or self-updates.
-
-**Required fields:**
-- None
-
-**Example:**
-```bash
-MODULE_UPDATE_METHOD="none"
-```
-
-## Dependencies
-
-Modules can declare dependencies on other modules using `MODULE_DEPENDS`.
-
-### Dependency Format
+Run after successful git clone. Use for setup scripts.
 
 ```bash
-MODULE_DEPENDS="bash-it fzf"
+post_install() {
+    cd "$MODULE_DIR" && ./setup.sh
+}
 ```
 
-**Rules:**
-- Dependencies are space-separated module names
-- Dependencies must exist (validation will fail if missing)
-- Circular dependencies are detected and prevented
-- Dependencies are installed before the dependent module
-- If a dependency fails to install, the dependent module installation is skipped
+### `update()`
 
-### Example
+Custom update logic.
 
 ```bash
-# Module: liquidprompt (depends on bash-it)
-MODULE_DEPENDS="bash-it"
+update() {
+    "$MODULE_DIR/bin/mytool" self-update
+}
 ```
 
-## Configuration Files
+**Default behavior:** `cd $MODULE_DIR && git pull`, then calls `post_install()` if defined.
 
-Modules can install configuration files that are tracked separately from the module itself.
+### `uninstall()`
 
-### Declaring Config Files
+Custom uninstall logic.
 
 ```bash
-MODULE_CONFIG_FILES="$HOME/.bashrc $HOME/.blerc"
+uninstall() {
+    rm -rf "$MODULE_DIR"
+    pip uninstall -y mytool
+}
 ```
 
-### Config File Update Behavior
+**Default behavior:** `rm -rf $MODULE_DIR`
 
-When updating, config files can be handled in three ways:
-
-1. **Overwrite** (`--config-overwrite`): Backup existing config, install new version
-2. **Keep** (`--config-keep`): Save new config as `<config>.new`, keep existing
-3. **Ask** (default): Prompt user for each config file
-
-**Note:** Config files are backed up before modification (backup suffix: `.pre-slaanesh-<timestamp>`).
-
-## Testing
-
-Modules can declare how they should be tested.
-
-### Test Metadata Fields
-
-- `MODULE_TEST_DIRS` - Directories that must exist
-- `MODULE_TEST_FILES` - Files that must exist
-- `MODULE_TEST_BINARIES` - Binaries that must be in PATH
-- `MODULE_TEST_COMMAND` - Shell command to run (returns 0 on success)
-
-### Test Function
-
-If `check_module_installed()` is defined, it will be used for testing. Otherwise, generic tests based on metadata are used.
-
-### Example
-
-```bash
-MODULE_TEST_DIRS="$HOME/.bash_it"
-MODULE_TEST_FILES="$HOME/.bash_it/bash_it.sh"
-MODULE_TEST_BINARIES=""
-MODULE_TEST_COMMAND="test -d $HOME/.bash_it && test -f $HOME/.bash_it/bash_it.sh"
-```
-
-## Core vs Default Modules
+## Module Types
 
 ### Core Modules
 
-Core modules are always installed and installation failure causes the installer to fail.
+Always installed. Installation failure aborts the entire install.
 
 ```bash
-MODULE_IS_CORE="true"
-MODULE_ENABLED_BY_DEFAULT="true"
+MODULE_CORE=true
 ```
 
-**Examples:** bash-it, ble.sh, fzf
+Examples: bash-it, blesh, fzf
 
 ### Default Modules
 
-Default modules are enabled by default but installation failure is non-fatal.
+Installed by default, but failure is non-fatal.
 
 ```bash
-MODULE_IS_CORE="false"
-MODULE_ENABLED_BY_DEFAULT="true"
+# No special flags needed - this is the default
 ```
 
-**Examples:** zoxide, pyenv, goenv
+Examples: pyenv, goenv, zoxide, thefuck, nano
 
 ### Optional Modules
 
-Optional modules are only installed with explicit flags.
+Only installed with explicit flags (e.g., `--with-bashhub`).
 
 ```bash
-MODULE_IS_CORE="false"
-MODULE_ENABLED_BY_DEFAULT="false"
+MODULE_OPTIONAL=true
 ```
 
-**Examples:** bashhub
+Examples: bashhub
 
-## Examples
+## Available Helpers
 
-### Example 1: Simple Git Clone Module
+These functions from `lib/common.sh` are available in modules:
+
+| Function | Description |
+|----------|-------------|
+| `command_exists <cmd>` | Check if command exists |
+| `log_info <msg>` | Print info message |
+| `log_success <msg>` | Print success message |
+| `log_warning <msg>` | Print warning message |
+| `log_error <msg>` | Print error message |
+| `run_as_root <cmd>` | Run command with sudo if needed |
+| `$PKG_MANAGER` | Detected package manager (apt, dnf, pacman, etc.) |
+| `$PKG_INSTALL` | Package install command (e.g., `apt-get install -y`) |
+| `$OS_FAMILY` | OS family (debian, rhel, arch, gentoo) |
+| `$SCRIPT_DIR` | Path to slaane.sh repository |
+
+## Complete Examples
+
+### Example 1: Simple Git Clone
 
 ```bash
 #!/usr/bin/env bash
-# Module: bash-it installation
-# Metadata: START
-MODULE_NAME="bash-it"
-MODULE_DESCRIPTION="Bash-it framework for shell customization"
-MODULE_ENABLED_BY_DEFAULT="true"
-MODULE_IS_CORE="true"
-MODULE_DEPENDS=""
-MODULE_INSTALL_METHOD="git_clone"
-MODULE_INSTALL_DIRS="$HOME/.bash_it"
-MODULE_INSTALL_REPO="https://github.com/Bash-it/bash-it.git"
-MODULE_INSTALL_ARGS="--depth=1"
-MODULE_UPDATE_METHOD="component_command"
-MODULE_UPDATE_DIR="$HOME/.bash_it"
-MODULE_UNINSTALL_DIRS="$HOME/.bash_it"
-MODULE_CONFIG_FILES=""
-MODULE_TEST_DIRS="$HOME/.bash_it"
-MODULE_TEST_FILES="$HOME/.bash_it/bash_it.sh"
-# Metadata: END
+# goenv - Go version manager
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source "$SCRIPT_DIR/lib/common.sh"
-source "$SCRIPT_DIR/lib/module-handlers.sh"
-
-main_module() {
-    # Generic handler will handle git_clone, but we can add custom logic
-    if [[ -d "$HOME/.bash_it" ]]; then
-        log_warning "bash-it already installed"
-        return 0
-    fi
-    
-    # Generic handler will be called automatically
-    # Or we can call it explicitly
-    install_via_git_clone "$MODULE_NAME"
-    
-    # Additional custom setup
-    bash "$HOME/.bash_it/install.sh" --silent --no-modify-config
-    return $?
-}
+MODULE_DIR="$HOME/.goenv"
+MODULE_REPO="https://github.com/go-nv/goenv.git"
 ```
 
-### Example 2: Custom Installation Module
+### Example 2: Git Clone with Plugins
 
 ```bash
 #!/usr/bin/env bash
-# Module: zoxide installation
-# Metadata: START
-MODULE_NAME="zoxide"
-MODULE_DESCRIPTION="Smart directory jumper"
-MODULE_ENABLED_BY_DEFAULT="true"
-MODULE_IS_CORE="false"
-MODULE_DEPENDS=""
-MODULE_INSTALL_METHOD="custom"
-MODULE_UNINSTALL_DIRS=""
-MODULE_UPDATE_METHOD="reinstall"
-MODULE_TEST_BINARIES="zoxide"
-# Metadata: END
+# pyenv - Python version manager
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source "$SCRIPT_DIR/lib/common.sh"
-source "$SCRIPT_DIR/lib/module-handlers.sh"
+MODULE_DIR="$HOME/.pyenv"
+MODULE_REPO="https://github.com/pyenv/pyenv.git"
 
-main_module() {
-    # Custom installation logic
-    # Try package manager first
-    if install_zoxide_from_package_manager; then
-        return 0
+post_install() {
+    git clone https://github.com/pyenv/pyenv-virtualenv.git \
+        "$MODULE_DIR/plugins/pyenv-virtualenv" || true
+    git clone https://github.com/pyenv/pyenv-update.git \
+        "$MODULE_DIR/plugins/pyenv-update" || true
+}
+
+update() {
+    if [[ -d "$MODULE_DIR/plugins/pyenv-update" ]]; then
+        "$MODULE_DIR/bin/pyenv" update
+    else
+        (cd "$MODULE_DIR" && git pull)
     fi
-    
-    # Fall back to official script
-    if install_zoxide_from_official_script; then
-        return 0
-    fi
-    
-    return 1
 }
 ```
 
-### Example 3: Module with Dependencies
+### Example 3: Build from Source
 
 ```bash
 #!/usr/bin/env bash
-# Module: liquidprompt installation
-# Metadata: START
-MODULE_NAME="liquidprompt"
-MODULE_DESCRIPTION="Adaptive prompt for bash"
-MODULE_ENABLED_BY_DEFAULT="true"
-MODULE_IS_CORE="false"
-MODULE_DEPENDS="bash-it"
-MODULE_INSTALL_METHOD="custom"
-MODULE_UNINSTALL_DIRS=""
-MODULE_UPDATE_METHOD="none"
-# Metadata: END
+# blesh - Bash Line Editor
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source "$SCRIPT_DIR/lib/common.sh"
-source "$SCRIPT_DIR/lib/module-handlers.sh"
+MODULE_DIR="$HOME/.local/share/blesh"
+MODULE_CORE=true
 
-main_module() {
-    # bash-it must be installed first (dependency)
-    if [[ ! -d "$HOME/.bash_it" ]]; then
-        log_error "bash-it is required but not installed"
-        return 1
+BLESH_SRC="$HOME/.local/src/blesh"
+
+is_installed() {
+    [[ -f "$MODULE_DIR/ble.sh" ]]
+}
+
+install() {
+    git clone --recursive https://github.com/akinomyoga/ble.sh.git "$BLESH_SRC"
+    (cd "$BLESH_SRC" && make install PREFIX="$HOME/.local")
+}
+
+update() {
+    (cd "$BLESH_SRC" && git pull && make install PREFIX="$HOME/.local")
+}
+
+uninstall() {
+    rm -rf "$MODULE_DIR" "$BLESH_SRC"
+}
+```
+
+### Example 4: Multiple Install Methods
+
+```bash
+#!/usr/bin/env bash
+# zoxide - Smart directory jumper
+
+MODULE_BIN="zoxide"
+
+install() {
+    # Try precompiled binary (fastest, no sudo)
+    local arch=$(uname -m)
+    case "$arch" in
+        x86_64)  binary="zoxide-x86_64-unknown-linux-musl" ;;
+        aarch64) binary="zoxide-aarch64-unknown-linux-musl" ;;
+        *) binary="" ;;
+    esac
+    
+    if [[ -n "$binary" ]]; then
+        mkdir -p "$HOME/.local/bin"
+        curl -sSfL "https://github.com/.../download/${binary}.tar.gz" \
+            | tar xz -C "$HOME/.local/bin/" zoxide && return 0
     fi
     
-    # Install liquidprompt theme
-    # ... custom logic ...
+    # Fall back to package manager
+    run_as_root $PKG_INSTALL zoxide
 }
+
+uninstall() {
+    rm -f "$HOME/.local/bin/zoxide"
+}
+```
+
+### Example 5: Pip Package
+
+```bash
+#!/usr/bin/env bash
+# thefuck - Command correction
+
+MODULE_BIN="thefuck"
+
+install() {
+    pip3 install --user thefuck || pip install --user thefuck
+}
+
+update() {
+    pip3 install --user --upgrade thefuck
+}
+
+uninstall() {
+    pip3 uninstall -y thefuck
+}
+```
+
+### Example 6: Optional Module
+
+```bash
+#!/usr/bin/env bash
+# bashhub - Cloud command history (requires account)
+
+MODULE_DIR="$HOME/.bashhub"
+MODULE_OPTIONAL=true
+
+install() {
+    log_warning "bashhub requires account at bashhub.com"
+    curl -fsSL https://bashhub.com/setup | bash
+}
+```
+
+## File Structure
+
+```
+modules/
+├── bash-it.sh    # Core module
+├── blesh.sh      # Core module  
+├── fzf.sh        # Core module
+├── goenv.sh      # Default module (3 lines!)
+├── pyenv.sh      # Default module
+├── zoxide.sh     # Default module
+├── thefuck.sh    # Default module
+├── nano.sh       # Default module
+└── bashhub.sh    # Optional module
+```
+
+## Testing Your Module
+
+```bash
+# List all modules
+./slaane.sh list
+
+# Test if module is detected as installed
+./slaane.sh test --module mymodule
+
+# Force reinstall
+./slaane.sh install --force --skip=bash-it,blesh,fzf
+
+# Test just your module
+source lib/common.sh
+source lib/modules.sh
+init_common
+install_module mymodule
 ```
 
 ## Best Practices
 
-1. **Use embedded metadata** for simple modules (one less file to maintain)
-2. **Use separate .conf files** for complex modules with extensive metadata
-3. **Always declare `MODULE_UNINSTALL_DIRS`** for safety (only remove what's explicitly declared)
-4. **Validate paths** in `MODULE_UNINSTALL_DIRS` are within `$HOME`
-5. **Use `MODULE_IS_CORE="true"`** only for essential modules
-6. **Declare dependencies** explicitly to ensure correct install order
-7. **Test modules** using both metadata-based tests and custom `check_module_installed()` if needed
-
-## Error Handling
-
-- Modules should return 0 on success, 1 on failure
-- Core modules that fail cause the installer to exit with error
-- Default/optional modules that fail are logged but don't stop installation
-- Always validate prerequisites before attempting installation
-- Use `log_error()`, `log_warning()`, `log_info()`, `log_success()` from `lib/common.sh`
-
+1. **Keep it simple** - If you're writing more than 20 lines, reconsider the approach
+2. **Use `MODULE_DIR` + `MODULE_REPO`** when possible - the framework handles everything
+3. **Prefer local installs** - `$HOME/.local/bin` over system packages when possible
+4. **Graceful fallbacks** - Try binary download → official script → package manager
+5. **Don't reinvent** - Use the helper functions from `lib/common.sh`

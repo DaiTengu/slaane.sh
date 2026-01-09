@@ -412,17 +412,14 @@ slaane.sh/
 ├── slaane.sh              # The master script (install, update, uninstall, list, test)
 ├── lib/
 │   ├── common.sh          # Common incantations (OS detection, logging)
-│   ├── module-api.sh       # Module discovery and metadata loading
-│   ├── module-handlers.sh  # Generic install/update/uninstall/test handlers
-│   ├── state-tracking.sh   # Installation state tracking
-│   └── config-handler.sh  # Configuration file management
-├── modules/
-│   ├── bash-it.sh         # bash-it summoner
-│   ├── blesh.sh           # ble.sh manifestation
-│   ├── fzf.sh             # fzf invocation
+│   └── modules.sh         # Module discovery and installation handlers
+├── modules/               # Each module is a simple declarative script
+│   ├── bash-it.sh         # bash-it summoner (core)
+│   ├── blesh.sh           # ble.sh manifestation (core)
+│   ├── fzf.sh             # fzf invocation (core)
 │   ├── zoxide.sh          # zoxide conjuration
 │   ├── pyenv.sh           # pyenv binding
-│   ├── goenv.sh           # goenv rite
+│   ├── goenv.sh           # goenv rite (3 lines of pure simplicity)
 │   ├── thefuck.sh         # thefuck channeling
 │   ├── nano.sh            # nano syntax highlighting (for heretics)
 │   └── bashhub.sh         # bashhub pact (optional)
@@ -432,7 +429,7 @@ slaane.sh/
 │   ├── bash-it-components     # List of enabled blessings
 │   └── liquidprompt.theme.bash # Corrupted liquidprompt theme (replaces broken default)
 ├── docs/
-│   └── MODULE_API.md          # Module API specification
+│   └── MODULE_API.md          # Module creation guide (simple!)
 ├── test.sh                # Verification ritual
 ├── test-docker.sh         # Multi-realm testing
 ├── TESTING.md             # Testing doctrine
@@ -513,13 +510,6 @@ Tested and verified across multiple distributions:
 - ✅ Rocky Linux 9 (27/27 tests)
 - ✅ Ubuntu 20.04 (27/27 tests)
 - ✅ Ubuntu 22.04 (27/27 tests)
-
-
-
-
-
-
-
 
 
 ## Contributing
