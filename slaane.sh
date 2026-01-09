@@ -50,6 +50,7 @@ if [[ -z "$SCRIPT_DIR" ]] || [[ ! -f "$SCRIPT_DIR/lib/common.sh" ]]; then
     for arg in "$@"; do
         [[ "$arg" != --branch=* ]] && NEW_ARGS+=("$arg")
     done
+    export BOOTSTRAP_BRANCH  # Pass branch to child script for git clone
     exec bash "$TEMP_DIR/slaane.sh-${BRANCH_DIR}/slaane.sh" "${NEW_ARGS[@]}"
 fi
 
