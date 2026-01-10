@@ -3,7 +3,7 @@
 > [!NOTE]
 > **WARP-DRIFT MITIGATION PROTOCOL**
 >
-> To prevent noospheric corruption and doctrinal forkage, this text is rendered in Common Low Gothic for deterministic comprehension across worlds, warbands, and weary adepts.
+> To prevent noospheric corruption and doctrinal forkage, this text is rendered in **Common Low Gothic** for deterministic comprehension across worlds, warbands, and weary adepts.
 >
 > *Clarity is not purity. Clarity is efficiency, and efficiency pleases.*
 
