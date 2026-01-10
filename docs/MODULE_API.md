@@ -1,5 +1,12 @@
 # Slaane.sh Module API
 
+> [!NOTE]
+> **WARP-DRIFT MITIGATION PROTOCOL**
+>
+> To prevent noospheric corruption and doctrinal forkage, this text is rendered in Common Low Gothic for deterministic comprehension across worlds, warbands, and weary adepts.
+>
+> *Clarity is not purity. Clarity is efficiency, and efficiency pleases.*
+
 This document explains how to create modules for Slaane.sh. The system is designed to be **simple** - most modules are just a few lines of configuration.
 
 ## Quick Start
