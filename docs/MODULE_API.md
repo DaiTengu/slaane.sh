@@ -1,5 +1,12 @@
 # Slaane.sh Module API
 
+> [!NOTE]
+> **WARP-DRIFT MITIGATION PROTOCOL**
+>
+> To prevent noospheric corruption and doctrinal forkage, this text is rendered in **Common Low Gothic** for deterministic comprehension across worlds, warbands, and weary adepts.
+>
+> *Clarity is not purity. Clarity is efficiency, and efficiency pleases.*
+
 This document explains how to create modules for Slaane.sh. The system is designed to be **simple** - most modules are just a few lines of configuration.
 
 ## Quick Start
@@ -298,34 +305,25 @@ uninstall() {
 # thefuck - Command correction
 
 MODULE_BIN="thefuck"
-
-install() {
-    pip3 install --user thefuck || pip install --user thefuck
-}
-
-update() {
-    pip3 install --user --upgrade thefuck
-}
-
-uninstall() {
-    pip3 uninstall -y thefuck
-}
+MODULE_PIP="thefuck"
 ```
 
-### Example 6: Optional Module
+The framework handles install, update, and uninstall via pip automatically.
+
+### Example 6: Optional Module with Warning
 
 ```bash
 #!/usr/bin/env bash
 # bashhub - Cloud command history (requires account)
 
 MODULE_DIR="$HOME/.bashhub"
+MODULE_CHECK_FILE="$HOME/.bashhub/bashhub.sh"
+MODULE_SCRIPT="https://bashhub.com/setup"
 MODULE_OPTIONAL=true
-
-install() {
-    log_warning "bashhub requires account at bashhub.com"
-    curl -fsSL https://bashhub.com/setup | bash
-}
+MODULE_NOTE="bashhub requires account registration at bashhub.com"
 ```
+
+The framework displays `MODULE_NOTE` before installation and runs the script automatically.
 
 ## File Structure
 

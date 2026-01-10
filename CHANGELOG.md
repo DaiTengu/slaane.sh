@@ -4,12 +4,22 @@ All notable changes to this unholy creation are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), but filtered through the warp.
 
-## [Unreleased]
+## [0.2.1] - The Purification
+
+### Added
+- **`MODULE_PKG_NAME`**: Summon packages directly from system repositories
+- **`MODULE_PIP`**: Bind Python offerings via pip with a single declaration
+- **`MODULE_CHECK_FILE`**: Divine installation status by file existence
+- **`MODULE_NOTE`**: Whisper warnings to initiates before corruption begins
+- **The Proving Grounds**: AWS-based testing infrastructure added to roadmap
 
 ### Changed
-- **Documentation**: Prioritized curl-based installation as the recommended path to corruption
-- **Installation flow**: Simplified installation and uninstallation instructions for maximum ease of use
-- **Uninstallation guide**: Enhanced with `slaane.sh uninstall --all` command and selective banishment options
+- **`check_installed()` logic**: The old OR logic was flawed—modules declaring multiple checks now require ALL to pass (AND logic)
+- **Module purification**: `bashhub`, `thefuck`, and `nano` reduced to pure metadata declarations
+- **Documentation**: MODULE_API.md updated with new variables and installation cascade details
+
+### Removed
+- **124 lines of custom code**: The framework now carries the burden that once plagued individual modules
 
 ## [0.2.0] - The Simplified Grimoire
 

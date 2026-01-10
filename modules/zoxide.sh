@@ -3,10 +3,6 @@
 
 MODULE_BIN="zoxide"
 
-is_installed() {
-    command_exists zoxide
-}
-
 install() {
     # Try binary download first (no sudo needed)
     if install_from_binary; then
