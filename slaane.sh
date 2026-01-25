@@ -179,7 +179,7 @@ cmd_update() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --component) component="$2"; shift 2 ;;
-            --branch) git fetch && git checkout "$2" && git pull; return $? ;;
+            --branch) (cd "$SCRIPT_DIR" && git fetch && git checkout "$2" && git pull); return $? ;;
             *) log_error "Unknown option: $1"; exit 1 ;;
         esac
     done
@@ -192,7 +192,7 @@ cmd_update() {
         update_module "$component"
     else
         log_info "Updating repository..."
-        git pull
+        (cd "$SCRIPT_DIR" && git pull)
     fi
 }
 
