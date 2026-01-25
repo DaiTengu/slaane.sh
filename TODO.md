@@ -5,6 +5,8 @@
 ## Rituals of Self-Improvement
 
 - [ ] **The Serpentine Update**: Craft `slaane.sh update --self` to slither the latest corruption from GitHub without devouring local modifications—shed the old skin while preserving the heretical customizations beneath
+- [ ] **Whispers from the Warp**: Bestow bash completion upon `slaane.sh`. Let the shell anticipate your desires, offering commands and module names before the thought fully forms
+- [ ] **Chains of Binding**: Introduce `MODULE_REQUIRES` for declaring dependencies—modules that demand other modules or specific binaries before their summoning can begin
 - [ ] **Python Incarnation**: Bind a specific Python vessel during the summoning ritual (e.g., `--python-version=3.12`)—for some daemons require particular hosts
 
 ## The Proving Grounds
