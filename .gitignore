@@ -14,3 +14,5 @@ test/
 *.bak
 *.backup
 
+# Temporary test scripts
+vm-setup.sh

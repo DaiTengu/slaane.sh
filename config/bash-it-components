@@ -64,5 +64,5 @@ pipenv
 terraform
 tmux
 vagrant
-aliases
+# aliases  # Disabled - causes syntax errors with some alias patterns
 

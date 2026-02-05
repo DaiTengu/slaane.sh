@@ -70,14 +70,95 @@ install() {
 | `MODULE_BIN` | No* | Binary name to check in PATH |
 | `MODULE_SCRIPT` | No | URL of installer script (curl\|bash) |
 | `MODULE_CORE` | No | Set to `true` if failure should abort install |
-| `MODULE_OPTIONAL` | No | Set to `true` if requires explicit flag to install |
+| `MODULE_OPTIONAL` | No | Set to `true` if requires explicit flag to install (e.g., `--with-bashhub`) |
+| `MODULE_INTERACTIVE` | No | Set to `true` if setup requires user interaction (skipped by `--module all`) |
+| `MODULE_MANUAL` | No | Set to `true` to exclude from bulk installs (skipped by `--module all`) |
 | `MODULE_CONFIG` | No | Config file to install to $HOME |
 | `MODULE_PKG_NAME` | No | Package name for system package manager install |
-| `MODULE_PIP` | No | Package name for pip install --user |
+| `MODULE_PIP` | No | Package name for pip install --user (legacy) |
 | `MODULE_CHECK_FILE` | No | Specific file to check for is_installed |
 | `MODULE_NOTE` | No | Warning message to display before install |
 
 *At least one of `MODULE_DIR`, `MODULE_BIN`, `MODULE_CHECK_FILE`, or a custom `install()` function is required.
+
+### v0.3.0 Module Variables
+
+These variables were added in v0.3.0 for improved installation and integration:
+
+| Variable | Description |
+|----------|-------------|
+| `MODULE_GITHUB` | GitHub repo for binary download via dra (e.g., `sharkdp/bat`) |
+| `MODULE_GITHUB_BINARY` | Binary name inside archive (defaults to MODULE_BIN) |
+| `MODULE_PIPX` | Package name for pipx install (preferred over MODULE_PIP for Python CLI tools) |
+| `MODULE_PROJECT_URL` | Project URL shown on install failure |
+| `MODULE_REQUIRES` | Space-separated list of required modules (checked before install) |
+| `MODULE_REPLACES` | Command this tool replaces (creates alias, e.g., `cat` for bat) |
+| `MODULE_BASHIT_PLUGIN` | bash-it plugin to auto-enable (e.g., `nvm`, `direnv`) |
+| `MODULE_BASHIT_ALIASES` | bash-it alias group to auto-enable (e.g., `kubectl`, `terraform`) |
+
+#### GitHub Binary Downloads
+
+For tools distributed as GitHub release binaries, use `MODULE_GITHUB`:
+
+```bash
+#!/usr/bin/env bash
+# bat - A cat clone with syntax highlighting
+
+MODULE_BIN="bat"
+MODULE_PKG_NAME="bat"
+MODULE_GITHUB="sharkdp/bat"
+MODULE_REPLACES="cat"
+MODULE_PROJECT_URL="https://github.com/sharkdp/bat"
+```
+
+The framework uses [dra](https://github.com/devmatteini/dra) to download the appropriate binary for your architecture. No custom `install()` function needed.
+
+#### Python CLI Tools (via pipx)
+
+For Python command-line tools, use `MODULE_PIPX`:
+
+```bash
+#!/usr/bin/env bash
+# jc - Convert CLI output to JSON
+
+MODULE_BIN="jc"
+MODULE_PIPX="jc"
+MODULE_PROJECT_URL="https://github.com/kellyjonbrazil/jc"
+```
+
+The framework auto-bootstraps pipx if needed, then installs the package.
+
+#### Drop-in Replacements
+
+For tools that replace standard commands, use `MODULE_REPLACES`:
+
+```bash
+MODULE_REPLACES="cat"  # Creates: alias cat='bat'
+```
+
+The alias is added to `~/.slaane.sh/aliases.sh` and removed on uninstall.
+
+#### Module Dependencies
+
+For tools that require other modules, use `MODULE_REQUIRES`:
+
+```bash
+MODULE_BIN="cargo-binstall"
+MODULE_REQUIRES="rustup"  # Must have rustup installed first
+```
+
+The framework checks dependencies before attempting installation.
+
+#### bash-it Integration
+
+To auto-enable bash-it plugins or aliases when installing a module:
+
+```bash
+MODULE_BASHIT_PLUGIN="nvm"      # Enables nvm plugin
+MODULE_BASHIT_ALIASES="kubectl" # Enables kubectl aliases
+```
+
+Only activated if bash-it is installed.
 
 **Note on is_installed checks:** The framework uses AND logic - if multiple check variables are defined (MODULE_BIN, MODULE_DIR, MODULE_CHECK_FILE), ALL must pass for the module to be considered installed.
 
@@ -185,7 +266,7 @@ Examples: bashhub
 
 ## Available Helpers
 
-These functions from `lib/common.sh` are available in modules:
+These functions from `lib/common.sh` and `lib/install-helpers.sh` are available in modules:
 
 | Function | Description |
 |----------|-------------|
@@ -195,10 +276,16 @@ These functions from `lib/common.sh` are available in modules:
 | `log_warning <msg>` | Print warning message |
 | `log_error <msg>` | Print error message |
 | `run_as_root <cmd>` | Run command with sudo if needed |
+| `has_sudo` | Check if sudo command exists |
+| `install_github_binary <repo>` | Download binary from GitHub via dra (v0.3.0) |
+| `try_pipx_install <pkg>` | Install Python tool via pipx (v0.3.0) |
 | `$PKG_MANAGER` | Detected package manager (apt, dnf, pacman, etc.) |
 | `$PKG_INSTALL` | Package install command (e.g., `apt-get install -y`) |
 | `$OS_FAMILY` | OS family (debian, rhel, arch, gentoo) |
 | `$SCRIPT_DIR` | Path to slaane.sh repository |
+| `$PREFER_GLOBAL` | True if `--global` flag was passed |
+| `$PREFER_LOCAL` | True if `--local` flag was passed |
+| `$FORCE_LOCAL` | True if `--force-local` flag was passed |
 
 ## Complete Examples
 
@@ -320,6 +407,7 @@ MODULE_DIR="$HOME/.bashhub"
 MODULE_CHECK_FILE="$HOME/.bashhub/bashhub.sh"
 MODULE_SCRIPT="https://bashhub.com/setup"
 MODULE_OPTIONAL=true
+MODULE_INTERACTIVE=true  # Setup script requires user input
 MODULE_NOTE="bashhub requires account registration at bashhub.com"
 ```
 

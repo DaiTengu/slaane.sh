@@ -5,9 +5,9 @@
 ## Rituals of Self-Improvement
 
 - [ ] **The Serpentine Update**: Craft `slaane.sh update --self` to slither the latest corruption from GitHub without devouring local modifications—shed the old skin while preserving the heretical customizations beneath
-- [ ] **Whispers from the Warp**: Bestow bash completion upon `slaane.sh`. Let the shell anticipate your desires, offering commands and module names before the thought fully forms
-- [ ] **Chains of Binding**: Introduce `MODULE_REQUIRES` for declaring dependencies—modules that demand other modules or specific binaries before their summoning can begin
 - [ ] **Python Incarnation**: Bind a specific Python vessel during the summoning ritual (e.g., `--python-version=3.12`)—for some daemons require particular hosts
+- [ ] **Ascension to Root**: A minimal slaane.sh configuration for the root user—not environment preservation tricks, but a proper root-native installation that activates on demand and leaves no trace when dismissed
+- [ ] **The EPEL Sacrament**: Enable EPEL repository for RHEL-family systems during prerequisites—unlocking packages like `bat`, `ripgrep`, and other modern weapons that the base repos refuse to carry
 
 ## The Proving Grounds
 
@@ -28,15 +28,16 @@ Modern weapons to replace the rusted Imperial utilities. All shall be bound to t
 
 ### Blades of Text & File
 
-- [ ] [bat](https://github.com/sharkdp/bat) - A `cat` reborn with syntax highlighting—witness your files shimmer with unholy colors
-- [ ] [jq](https://github.com/jqlang/jq) - Interrogate JSON with surgical precision; extract confessions from any API
+- [ ] [difftastic](https://github.com/Wilfred/difftastic) - A diff that perceives the structure of code, not mere lines—tree-sitter parses 60+ languages so refactoring cannot hide from your gaze
+
+### The JSON Triumvirate (and Their Acolytes)
+
+- [ ] [gron](https://github.com/tomnomnom/gron) - Flatten the nested hierarchies of JSON into greppable lines; `ungron` to restore the fallen structure
+- [ ] [jless](https://github.com/PaulJuliusMartinez/jless) - Scry through JSON as a pager possessed—vim bindings guide you through collapsing and expanding the nested depths
 - [ ] [yq](https://github.com/mikefarah/yq) - The sibling blade for YAML, XML, and other structured scripture
-- [ ] [ripgrep](https://github.com/BurntSushi/ripgrep) - Grep reforged in the warp—blazingly fast, respects no boundary
-- [ ] [fd](https://github.com/sharkdp/fd) - The `find` command freed from its decrepit Imperial syntax
 
 ### The All-Seeing Eye (Directory & Listing)
 
-- [ ] [eza](https://github.com/eza-community/eza) - `ls` ascended—colors, icons, Git awareness; the successor to the fallen exa
 - [ ] [lsd](https://github.com/lsd-rs/lsd) - Another vision of `ls` perfected—choose your aesthetic poison
 
 ### Scrying the Machine Spirit (System Monitoring)
@@ -45,6 +46,7 @@ Modern weapons to replace the rusted Imperial utilities. All shall be bound to t
 - [ ] [bpytop](https://github.com/aristocratos/bpytop) - The Python incarnation for systems that reject btop's C++ vessel
 - [ ] [gping](https://github.com/orf/gping) - Ping rendered as prophecy—watch latency dance across your terminal
 - [ ] [dust](https://github.com/bootandy/dust) - `du` reborn with intuition; understand where your disk space bleeds
+- [ ] [gdu](https://github.com/dundee/gdu) - Disk consumption laid bare through Go's parallel fury—SSDs yield their secrets in seconds, not minutes
 - [ ] [duf](https://github.com/muesli/duf) - `df` made beautiful; survey your storage domains at a glance
 
 ### Tendrils Across the Warp (Network Tools)
@@ -64,7 +66,6 @@ Version managers and toolchains bound to user space—no sudo required, no syste
 
 ### The Rust Forge
 
-- [ ] [rustup](https://rustup.rs/) - The canonical path to Rust—required for Fresh and other Rust-forged weapons
 - [ ] [cargo-binstall](https://github.com/cargo-bins/cargo-binstall) - Summon pre-compiled Rust binaries; why waste time compiling what others have already forged?
 
 ### The Go Crucible
@@ -74,7 +75,6 @@ Version managers and toolchains bound to user space—no sudo required, no syste
 
 ### The JavaScript Pit
 
-- [ ] [nvm](https://github.com/nvm-sh/nvm) - Node Version Manager—because JavaScript's chaos spawns new versions endlessly
 - [ ] [pnpm](https://pnpm.io/) - A package manager that doesn't devour your entire disk
 
 ## Dominion Over the Data Centers
@@ -90,14 +90,14 @@ Command the machine spirits across cloud realms and container hells.
 
 ### Infrastructure as Dark Scripture
 
-- [ ] [Terraform](https://www.terraform.io/) - Write infrastructure into existence; destroy it with equal ease
+- [ ] [Terraform](https://www.terraform.io/) - Write infrastructure into existence; destroy it with equal ease *(bash-it aliases available)*
 - [ ] [OpenTofu](https://opentofu.org/) - Terraform liberated from HashiCorp's tightening grip
-- [ ] [Ansible](https://www.ansible.com/) - Agentless automation—your will executed across a thousand servers
+- [ ] [Ansible](https://www.ansible.com/) - Agentless automation—your will executed across a thousand servers *(bash-it aliases available)*
 - [ ] [Pulumi](https://www.pulumi.com/) - Infrastructure in actual programming languages, not YAML purgatory
 
 ### Kubernetes—The Container Hellscape
 
-- [ ] [kubectl](https://kubernetes.io/docs/tasks/tools/) - The fundamental incantation for commanding container orchestration
+- [ ] [kubectl](https://kubernetes.io/docs/tasks/tools/) - The fundamental incantation for commanding container orchestration *(bash-it aliases available)*
 - [ ] [k9s](https://github.com/derailed/k9s) - A terminal UI that makes Kubernetes almost bearable
 - [ ] [helm](https://helm.sh/) - Package manager for Kubernetes—deploy complexity with a single command
 - [ ] [kubectx/kubens](https://github.com/ahmetb/kubectx) - Switch between clusters and namespaces without losing your sanity
@@ -112,11 +112,24 @@ Command the machine spirits across cloud realms and container hells.
 
 Install via pipx—each tool isolated in its own daemon prison, never conflicting, eternally contained.
 
-- [ ] [pipx](https://github.com/pypa/pipx) - The vessel for isolated Python tool installation
 - [ ] [rich-cli](https://github.com/Textualize/rich-cli) - Terminal output so beautiful it brings tears to obsessive eyes
 - [ ] [rich](https://github.com/Textualize/rich) - The foundation library—rich text, tables, progress bars, all rendered in terminal glory
 - [ ] [toolong](https://github.com/Textualize/toolong) - Log file viewer for when your sins scroll past too quickly
 - [ ] [posting](https://github.com/darrenburns/posting) - TUI HTTP client—Postman for the terminal-dwelling
+
+## Terminal User Interfaces
+
+Visual corruption of the command line—keyboard-driven portals into complex domains.
+
+- [ ] [lazydocker](https://github.com/jesseduffield/lazydocker) - Docker's container hellscape tamed into a single pane—witness logs flow, stats pulse, and daemons bend to your will
+- [ ] [yazi](https://github.com/sxyazi/yazi) - A file manager of blasphemous speed—async I/O, image previews rendered in terminal, vim bindings, and zoxide/fzf communion
+- [ ] [k9s](https://github.com/derailed/k9s) - Kubernetes made almost bearable (also listed under the Container Hellscape)
+
+## Productivity & Task Management
+
+Even the servants of Chaos must track their heresies.
+
+- [ ] [taskwarrior](https://github.com/GothenburgBitFactory/taskwarrior) - Command-line task management for the obsessively devoted—tags, projects, priorities, dependencies, and reports to chronicle your corruption *(bash-it plugin + aliases)*
 
 ## Shell Mutations
 
@@ -124,9 +137,10 @@ Further corruptions of the shell experience.
 
 - [ ] [starship](https://starship.rs/) - Cross-shell prompt of impossible beauty (an alternative to our current liquidprompt heresy)
 - [ ] [atuin](https://github.com/atuinsh/atuin) - Shell history synchronized across all your machines through the warp—never lose a command again
-- [ ] [direnv](https://direnv.net/) - Environment variables that shift as you traverse directories
-- [ ] [tmux](https://github.com/tmux/tmux) - Terminal multiplexer with bespoke configuration—split, detach, persist
-- [ ] [tmuxinator](https://github.com/tmuxinator/tmuxinator) - Orchestrate complex tmux sessions with a single word
+- [ ] [direnv](https://direnv.net/) - Environment variables that shift as you traverse directories *(bash-it plugin available)*
+- [ ] [zellij](https://github.com/zellij-org/zellij) - A terminal workspace that splits, floats, and tabs without tmux's arcane keybindings—Rust-forged with WASM plugins for those who demand extensibility without suffering
+- [ ] [tmux](https://github.com/tmux/tmux) - Terminal multiplexer with bespoke configuration—split, detach, persist *(bash-it plugin + aliases)*
+- [ ] [tmuxinator](https://github.com/tmuxinator/tmuxinator) - Orchestrate complex tmux sessions with a single word *(bash-it plugin available)*
 
 ---
 
