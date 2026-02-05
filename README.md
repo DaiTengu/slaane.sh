@@ -24,6 +24,25 @@ Your shell environment, perfected through obsessive customization, deserves to f
 - **[thefuck](https://github.com/nvbn/thefuck)** - Command correction through sheer indignation
 - **[nano-syntax-highlighting](https://github.com/galenguyer/nano-syntax-highlighting)** - Syntax highlighting for the nano editor (for those who embrace heresy over vim)
 
+### Terminal Weapons (v0.3.0)
+
+Modern replacements for rusty Imperial utilities, installed to user space (`~/.local/bin`):
+
+- **[bat](https://github.com/sharkdp/bat)** - `cat` reborn with syntax highlighting (aliased as `cat`)
+- **[ripgrep](https://github.com/BurntSushi/ripgrep)** - Grep reforged in Rust, blazingly fast
+- **[fd](https://github.com/sharkdp/fd)** - `find` freed from decrepit syntax
+- **[eza](https://github.com/eza-community/eza)** - `ls` ascended with colors and Git awareness
+- **[sd](https://github.com/chmln/sd)** - `sed` liberated from escape sequences
+- **[jq](https://github.com/jqlang/jq)** - JSON interrogation with surgical precision
+- **[jc](https://github.com/kellyjonbrazil/jc)** - Convert CLI output to JSON (150+ commands)
+- **[lazygit](https://github.com/jesseduffield/lazygit)** - Git's complexity rendered visual
+
+### Language Toolchains (v0.3.0)
+
+- **[rustup](https://rustup.rs/)** - The Rust toolchain installer
+- **[nvm](https://github.com/nvm-sh/nvm)** - Node Version Manager
+- **[pipx](https://github.com/pypa/pipx)** - Isolated Python CLI tool installation
+
 ### Optional Temptations
 
 - **[bashhub](https://bashhub.com)** - Command history stored in the cloud (requires ritual authentication)
@@ -59,6 +78,9 @@ After the ritual completes:
 
 ```bash
 # Reload your shell to embrace the changes
+reload  # Function provided by slaane.sh
+
+# Or manually source
 source ~/.bashrc
 
 # Or summon a fresh shell entirely
@@ -94,6 +116,27 @@ slaane.sh install --with-bashhub
 **System-Wide Corruption** - Invoke the machine's overseers (requires sudo):
 ```bash
 slaane.sh install --global
+```
+
+**User-Space Only** - No sudo prompts, install everything locally:
+```bash
+slaane.sh install --local
+```
+
+**Force Local** - Install local version even if tool exists system-wide:
+```bash
+slaane.sh install --force-local
+```
+
+**Install Specific Module** - Target a single tool:
+```bash
+slaane.sh install --module bat --local
+slaane.sh install --module lazygit
+```
+
+**Install All Modules** - Mass summoning (skips interactive modules):
+```bash
+slaane.sh install --module all --local
 ```
 
 **Force Reinstallation** - Purge and rebuild:
@@ -412,24 +455,34 @@ slaane.sh/
 ├── slaane.sh              # The master script (install, update, uninstall, list, test)
 ├── lib/
 │   ├── common.sh          # Common incantations (OS detection, logging)
-│   └── modules.sh         # Module discovery and installation handlers
+│   ├── modules.sh         # Module discovery and installation handlers
+│   └── install-helpers.sh # GitHub binary and pipx installation helpers
 ├── modules/               # Each module is a simple declarative script
 │   ├── bash-it.sh         # bash-it summoner (core)
 │   ├── blesh.sh           # ble.sh manifestation (core)
 │   ├── fzf.sh             # fzf invocation (core)
+│   ├── bat.sh             # bat (cat replacement)
+│   ├── ripgrep.sh         # ripgrep (grep replacement)
+│   ├── fd.sh              # fd (find replacement)
+│   ├── eza.sh             # eza (ls replacement)
+│   ├── jq.sh              # jq (JSON processor)
+│   ├── lazygit.sh         # lazygit (Git TUI)
+│   ├── rustup.sh          # Rust toolchain
+│   ├── nvm.sh             # Node version manager
 │   ├── zoxide.sh          # zoxide conjuration
 │   ├── pyenv.sh           # pyenv binding
-│   ├── goenv.sh           # goenv rite (3 lines of pure simplicity)
+│   ├── goenv.sh           # goenv rite
 │   ├── thefuck.sh         # thefuck channeling
-│   ├── nano.sh            # nano syntax highlighting (for heretics)
+│   ├── nano.sh            # nano syntax highlighting
 │   └── bashhub.sh         # bashhub pact (optional)
 ├── config/
 │   ├── bashrc.template        # Template grimoire
-│   ├── blerc                  # ble.sh tome (1307 lines of perfection)
+│   ├── blerc                  # ble.sh tome
 │   ├── bash-it-components     # List of enabled blessings
-│   └── liquidprompt.theme.bash # Corrupted liquidprompt theme (replaces broken default)
+│   ├── slaane.bash-completion # Tab completion for slaane.sh
+│   └── liquidprompt.theme.bash # Corrupted liquidprompt theme
 ├── docs/
-│   └── MODULE_API.md          # Module creation guide (simple!)
+│   └── MODULE_API.md          # Module creation guide
 ├── test.sh                # Verification ritual
 ├── test-docker.sh         # Multi-realm testing
 ├── TESTING.md             # Testing doctrine
