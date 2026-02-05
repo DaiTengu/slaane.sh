@@ -101,8 +101,13 @@ is_root() {
     [[ $EUID -eq 0 ]]
 }
 
-# Check if sudo is available and user has sudo access
+# Check if sudo command exists (not if user can sudo - just the command)
 has_sudo() {
+    command -v sudo &>/dev/null
+}
+
+# Check if user has passwordless sudo access
+has_passwordless_sudo() {
     if command_exists sudo; then
         sudo -n true 2>/dev/null
         return $?
@@ -110,10 +115,12 @@ has_sudo() {
     return 1
 }
 
-# Global flag to track sudo consent
+# Global flags for install behavior
 SUDO_DECLINED="${SUDO_DECLINED:-false}"
 AUTO_SUDO="${AUTO_SUDO:-false}"  # Set by --install-prereqs or --global
 PREFER_GLOBAL="${PREFER_GLOBAL:-false}"  # Set by --global flag
+PREFER_LOCAL="${PREFER_LOCAL:-false}"  # Set by --local flag
+FORCE_LOCAL="${FORCE_LOCAL:-false}"  # Set by --force-local flag
 
 # Prompt user for sudo permission
 prompt_for_sudo() {
@@ -244,6 +251,46 @@ get_package_names() {
     esac
     
     echo "$packages"
+}
+
+# Bootstrap dra (GitHub release downloader)
+# Called early in install process before any module installation
+install_dra() {
+    command -v dra &>/dev/null && return 0
+    
+    log_info "Installing dra (GitHub release downloader)..."
+    mkdir -p "$HOME/.local/bin"
+    curl --proto '=https' --tlsv1.2 -sSf \
+        https://raw.githubusercontent.com/devmatteini/dra/refs/heads/main/install.sh \
+        | bash -s -- --to "$HOME/.local/bin"
+    
+    export PATH="$HOME/.local/bin:$PATH"
+}
+
+# Prompt user for install preference (system-wide vs local)
+# Called once at start of cmd_install() - all modules respect this single choice
+prompt_install_preference() {
+    # Explicit flags take priority
+    [[ "$PREFER_LOCAL" == "true" ]] && return
+    [[ "$PREFER_GLOBAL" == "true" ]] && return
+    
+    # No sudo command = local only
+    if ! has_sudo; then
+        PREFER_LOCAL=true
+        log_info "No sudo available - will install to user space"
+        return
+    fi
+    
+    # Ask user - default to local (N) if anything other than explicit yes
+    read -p "Install system-wide where possible? (requires sudo) [y/N]: " -r
+    if [[ "$REPLY" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+        PREFER_GLOBAL=true
+        export PREFER_GLOBAL
+        # sudo will prompt for password on first actual use
+    else
+        PREFER_LOCAL=true
+        export PREFER_LOCAL
+    fi
 }
 
 # Initialize - detect OS and package manager

@@ -4,6 +4,40 @@ All notable changes to this unholy creation are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), but filtered through the warp.
 
+## [0.3.0] - The Ascension
+
+### Added
+- **`MODULE_GITHUB`**: Summon binaries directly from GitHub releases via the `dra` daemon
+- **`MODULE_PIPX`**: Bind Python CLI tools through pipx's isolated sanctuaries
+- **`MODULE_REQUIRES`**: Declare dependencies—the warp ensures prerequisites manifest first
+- **`MODULE_REPLACES`**: Forge aliases that let modern tools usurp their ancestors (cat→bat, ls→eza)
+- **`MODULE_INTERACTIVE`**: Mark modules requiring mortal interaction (skipped during bulk rituals)
+- **`MODULE_MANUAL`**: Exclude modules from mass summonings
+- **`MODULE_PROJECT_URL`**: Inscribe links to each tool's origin shrine
+- **`MODULE_BASHIT_PLUGIN` / `MODULE_BASHIT_ALIASES`**: Integrate offerings with the bash-it framework
+- **dra bootstrapping**: The GitHub release asset daemon now self-manifests when needed
+- **pipx bootstrapping**: Python tool installer materializes automatically, with pip fallback for barren systems
+- **`--module <name>` flag**: Target specific modules for installation
+- **`--module all`**: Mass summoning of all non-interactive, non-optional modules
+- **`--local` / `--force-local` / `--global`**: Control whether offerings bind to user space or system-wide
+- **`reload` function**: Refresh your corrupted environment without leaving the shell
+- **New modules**: `bat`, `ripgrep`, `fd`, `eza`, `sd`, `jq`, `lazygit`, `jc`, `pipx`, `rustup`, `nvm`
+- **`lib/install-helpers.sh`**: Consolidated grimoire for GitHub and pipx installation rites
+- **Bash completion**: Tab completion for all slaane.sh commands and module names
+- **`--help` on subcommands**: All commands now respond to cries for guidance
+
+### Changed
+- **Installation cascade**: System package → GitHub binary (dra) → pipx → legacy pip → git clone → script
+- **Command consistency**: `update` now uses `--module` instead of `--component`
+- **bash-it aliases completion**: Disabled by default (the daemon was unstable)
+
+### Fixed
+- **pip bootstrapping**: Systems lacking global pip now receive it via get-pip.py during pipx installation
+- **Prerequisites**: python3-pip detection added to prerequisite checks
+
+### Verified
+- Tested and verified on Rocky Linux 9 (with and without sudo access)
+
 ## [0.2.1] - The Purification
 
 ### Added

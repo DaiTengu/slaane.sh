@@ -59,6 +59,7 @@ export SCRIPT_DIR
 # Source libraries
 source "$SCRIPT_DIR/lib/common.sh"
 source "$SCRIPT_DIR/lib/modules.sh"
+source "$SCRIPT_DIR/lib/install-helpers.sh"
 
 # Initialize
 init_common
@@ -73,21 +74,27 @@ cmd_install() {
     local minimal=false
     local with_bashhub=false
     local skip_list=""
+    local single_module=""
     
     while [[ $# -gt 0 ]]; do
         case "$1" in
+            --help|-h) show_help; exit 0 ;;
             --install-prereqs) install_prereqs=true; AUTO_SUDO=true ;;
             --force) force=true ;;
             --minimal) minimal=true ;;
             --global) AUTO_SUDO=true; PREFER_GLOBAL=true ;;
+            --local) PREFER_LOCAL=true ;;
+            --force-local) FORCE_LOCAL=true; PREFER_LOCAL=true ;;
             --with-bashhub) with_bashhub=true ;;
             --skip=*) skip_list="${1#*=}" ;;
+            --module) single_module="$2"; shift ;;
             *) log_error "Unknown option: $1"; show_help; exit 1 ;;
         esac
         shift
     done
     
     export FORCE_INSTALL="$force"
+    export PREFER_LOCAL PREFER_GLOBAL FORCE_LOCAL
     
     # Clone to permanent location if running from temp
     if [[ "$SCRIPT_DIR" == /tmp/* ]]; then
@@ -106,6 +113,49 @@ cmd_install() {
     # Install prerequisites if requested
     if [[ "$install_prereqs" == "true" ]]; then
         install_prerequisites
+    fi
+    
+    # Prompt for install preference (system-wide vs local) - single prompt for all modules
+    prompt_install_preference
+    
+    # Bootstrap dra for GitHub binary downloads
+    install_dra
+    
+    # If single module specified, just install that one
+    if [[ -n "$single_module" ]]; then
+        if [[ "$single_module" == "all" ]]; then
+            # Install all discovered modules (except excluded ones)
+            local failed=0
+            for mod in $(discover_modules); do
+                load_module "$mod" || continue
+                
+                # Skip interactive modules (require user input during setup)
+                if [[ "${MODULE_INTERACTIVE:-false}" == "true" ]]; then
+                    log_info "Skipping $mod (interactive setup required)"
+                    continue
+                fi
+                # Skip optional modules (require explicit --with-* flag)
+                if [[ "${MODULE_OPTIONAL:-false}" == "true" ]]; then
+                    log_info "Skipping $mod (optional - use --with-* flag)"
+                    continue
+                fi
+                # Skip manually-installed modules (excluded from bulk install)
+                if [[ "${MODULE_MANUAL:-false}" == "true" ]]; then
+                    log_info "Skipping $mod (manual install only)"
+                    continue
+                fi
+                
+                echo ""
+                log_info "========================================"
+                log_info "Installing: $mod"
+                log_info "========================================"
+                install_module "$mod" || ((failed++))
+            done
+            [[ $failed -eq 0 ]] && log_success "All modules installed" || log_warning "$failed module(s) failed"
+            return $failed
+        fi
+        install_module "$single_module"
+        return $?
     fi
     
     # Build module list
@@ -174,22 +224,23 @@ cmd_install() {
 }
 
 cmd_update() {
-    local component=""
+    local module=""
     
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --component) component="$2"; shift 2 ;;
+            --help|-h) show_help; exit 0 ;;
+            --module) module="$2"; shift 2 ;;
             --branch) (cd "$SCRIPT_DIR" && git fetch && git checkout "$2" && git pull); return $? ;;
             *) log_error "Unknown option: $1"; exit 1 ;;
         esac
     done
     
-    if [[ "$component" == "all" ]]; then
+    if [[ "$module" == "all" ]]; then
         for mod in $(discover_modules); do
             check_installed "$mod" && update_module "$mod"
         done
-    elif [[ -n "$component" ]]; then
-        update_module "$component"
+    elif [[ -n "$module" ]]; then
+        update_module "$module"
     else
         log_info "Updating repository..."
         (cd "$SCRIPT_DIR" && git pull)
@@ -202,6 +253,7 @@ cmd_uninstall() {
     
     while [[ $# -gt 0 ]]; do
         case "$1" in
+            --help|-h) show_help; exit 0 ;;
             --module) module="$2"; shift 2 ;;
             --purge) purge=true; module="all"; shift ;;
             *) log_error "Unknown option: $1"; exit 1 ;;
@@ -245,6 +297,7 @@ cmd_uninstall() {
 cmd_list() {
     local show_installed=false
     
+    [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]] && { show_help; exit 0; }
     [[ "${1:-}" == "--installed" ]] && show_installed=true
     
     echo ""
@@ -266,6 +319,8 @@ cmd_list() {
 }
 
 cmd_test() {
+    [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]] && { show_help; exit 0; }
+    
     local module="${2:-}"
     
     [[ "$1" != "--module" ]] && { log_error "Usage: test --module <name|all>"; exit 1; }
@@ -310,6 +365,11 @@ install_prerequisites() {
     for cmd in git curl make gawk; do
         command_exists "$cmd" || missing+=("$cmd")
     done
+    
+    # Check for pip separately (different command name than package)
+    if ! python3 -m pip --version &>/dev/null; then
+        missing+=("python3-pip")
+    fi
     
     if [[ ${#missing[@]} -gt 0 ]]; then
         log_info "Installing: ${missing[*]}"
@@ -359,17 +419,20 @@ Commands:
   help        Show this help
 
 Install Options:
+  --module <name>     Install a specific module only
   --install-prereqs   Install missing prerequisites (git, curl, make, gawk)
   --force             Force reinstall of modules
   --minimal           Install only core modules (bash-it, blesh, fzf)
   --global            Prefer system package manager installations
+  --local             Force user-space install, skip system package prompt
+  --force-local       Install local version even if tool already exists in PATH
   --with-bashhub      Include bashhub (requires account)
   --skip=mod1,mod2    Skip specific modules
   --branch=<branch>   Install from specific git branch
 
 Update Options:
-  --component <name>  Update specific module
-  --component all     Update all installed modules
+  --module <name>     Update specific module
+  --module all        Update all installed modules
   --branch <branch>   Switch to git branch
 
 Uninstall Options:
@@ -382,8 +445,9 @@ List Options:
 
 Examples:
   slaane.sh install --install-prereqs
+  slaane.sh install --module bat --local
   slaane.sh install --minimal --skip=nano
-  slaane.sh update --component all
+  slaane.sh update --module all
   slaane.sh uninstall --module pyenv
   slaane.sh list --installed
 EOF

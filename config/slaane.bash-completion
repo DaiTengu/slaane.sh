@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Bash completion for slaane.sh
+# Source this file or place in /etc/bash_completion.d/
+
+_slaane_completions() {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    
+    # Commands
+    local commands="install update uninstall list test help"
+    
+    # Options by command
+    local install_opts="--module --install-prereqs --force --minimal --global --local --force-local --with-bashhub --skip= --branch="
+    local update_opts="--module --branch"
+    local uninstall_opts="--module --purge"
+    local list_opts="--installed"
+    
+    case "$prev" in
+        slaane.sh|*/slaane.sh)
+            COMPREPLY=($(compgen -W "$commands" -- "$cur"))
+            return 0
+            ;;
+        --module)
+            # Get list of modules
+            local script_dir
+            if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+                script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+            else
+                script_dir="$HOME/slaane.sh"
+            fi
+            
+            local modules=""
+            if [[ -d "$script_dir/modules" ]]; then
+                for f in "$script_dir/modules"/*.sh; do
+                    [[ -f "$f" ]] && modules+=" $(basename "$f" .sh)"
+                done
+            fi
+            COMPREPLY=($(compgen -W "$modules all" -- "$cur"))
+            return 0
+            ;;
+        install)
+            COMPREPLY=($(compgen -W "$install_opts" -- "$cur"))
+            return 0
+            ;;
+        update)
+            COMPREPLY=($(compgen -W "$update_opts" -- "$cur"))
+            return 0
+            ;;
+        uninstall)
+            COMPREPLY=($(compgen -W "$uninstall_opts" -- "$cur"))
+            return 0
+            ;;
+        list)
+            COMPREPLY=($(compgen -W "$list_opts" -- "$cur"))
+            return 0
+            ;;
+        test)
+            COMPREPLY=($(compgen -W "--module" -- "$cur"))
+            return 0
+            ;;
+    esac
+    
+    # Handle --skip= prefix completion
+    if [[ "$cur" == --skip=* ]]; then
+        local prefix="${cur%=*}="
+        COMPREPLY=("$prefix")
+        return 0
+    fi
+    
+    # Default: complete commands
+    COMPREPLY=($(compgen -W "$commands" -- "$cur"))
+}
+
+complete -F _slaane_completions slaane.sh
+complete -F _slaane_completions ./slaane.sh

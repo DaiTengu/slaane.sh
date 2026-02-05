@@ -127,10 +127,25 @@ if ! shopt -oq posix; then
     fi
 fi
 
+# Source slaane.sh bash completion
+if [[ -f "$HOME/slaane.sh/config/slaane.bash-completion" ]]; then
+    source "$HOME/slaane.sh/config/slaane.bash-completion"
+fi
+
+# Source slaane.sh aliases (drop-in replacements like bat -> cat)
+if [[ -f "$HOME/.slaane.sh/aliases.sh" ]]; then
+    source "$HOME/.slaane.sh/aliases.sh"
+fi
+
 # Source local bashrc if it exists (for machine-specific configuration)
 if [[ -f "$HOME/.bashrc.local" ]]; then
     source "$HOME/.bashrc.local"
 fi
+
+# Reload shell environment
+reload() {
+    source ~/.bashrc
+}
 
 # bashhub integration (if installed)
 if [[ -f "$HOME/.bashhub/bashhub.sh" ]]; then

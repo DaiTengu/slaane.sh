@@ -5,4 +5,5 @@ MODULE_DIR="$HOME/.bashhub"
 MODULE_CHECK_FILE="$HOME/.bashhub/bashhub.sh"
 MODULE_SCRIPT="https://bashhub.com/setup"
 MODULE_OPTIONAL=true
+MODULE_INTERACTIVE=true  # Setup script requires user input
 MODULE_NOTE="bashhub requires account registration at bashhub.com"
