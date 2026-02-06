@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - **pip bootstrapping**: Systems lacking global pip now receive it via get-pip.py during pipx installation
 - **Prerequisites**: python3-pip detection added to prerequisite checks
+- **thefuck on Python 3.12+**: Skips pip install (imp module removed); tries system package first when `--global`
 
 ### Verified
 - Tested and verified on Rocky Linux 9 (with and without sudo access)
