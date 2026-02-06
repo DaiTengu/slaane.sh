@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **`--module all`**: Mass summoning of all non-interactive, non-optional modules
 - **`--local` / `--force-local` / `--global`**: Control whether offerings bind to user space or system-wide
 - **`reload` function**: Refresh your corrupted environment without leaving the shell
-- **New modules**: `bat`, `ripgrep`, `fd`, `eza`, `sd`, `jq`, `lazygit`, `jc`, `pipx`, `rustup`, `nvm`
+- **New modules**: `bat`, `ripgrep`, `fd`, `eza`, `sd`, `jq`, `lazygit`, `jc`, `pipx`, `rustup`, `nvm`, `atac`
 - **`lib/install-helpers.sh`**: Consolidated grimoire for GitHub and pipx installation rites
 - **Bash completion**: Tab completion for all slaane.sh commands and module names
 - **`--help` on subcommands**: All commands now respond to cries for guidance
