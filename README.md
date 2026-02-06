@@ -36,6 +36,7 @@ Modern replacements for rusty Imperial utilities, installed to user space (`~/.l
 - **[jq](https://github.com/jqlang/jq)** - JSON interrogation with surgical precision
 - **[jc](https://github.com/kellyjonbrazil/jc)** - Convert CLI output to JSON (150+ commands)
 - **[lazygit](https://github.com/jesseduffield/lazygit)** - Git's complexity rendered visual
+- **[atac](https://github.com/Julien-cpsn/ATAC)** - Terminal API client (Postman-like, no account required)
 
 ### Language Toolchains (v0.3.0)
 
@@ -467,6 +468,7 @@ slaane.sh/
 │   ├── eza.sh             # eza (ls replacement)
 │   ├── jq.sh              # jq (JSON processor)
 │   ├── lazygit.sh         # lazygit (Git TUI)
+│   ├── atac.sh            # atac (API client TUI)
 │   ├── rustup.sh          # Rust toolchain
 │   ├── nvm.sh             # Node version manager
 │   ├── zoxide.sh          # zoxide conjuration
