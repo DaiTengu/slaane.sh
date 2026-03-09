@@ -96,7 +96,7 @@ cmd_install() {
     export FORCE_INSTALL="$force"
     export PREFER_LOCAL PREFER_GLOBAL FORCE_LOCAL
     
-    # Clone to permanent location if running from temp
+    # Clone or copy to permanent location if running from temp (curl|bash path)
     if [[ "$SCRIPT_DIR" == /tmp/* ]]; then
         local target="$HOME/slaane.sh"
         if [[ -d "$target" ]] && [[ "$force" != "true" ]]; then
@@ -104,7 +104,20 @@ cmd_install() {
             exec bash "$target/slaane.sh" install "$@"
         fi
         [[ -d "$target" ]] && rm -rf "$target"
-        git clone -b "${BOOTSTRAP_BRANCH:-master}" https://github.com/DaiTengu/slaane.sh.git "$target"
+
+        if ! command -v git &>/dev/null; then
+            if [[ "$install_prereqs" == "true" ]] || [[ "${PREFER_GLOBAL:-}" == "true" ]]; then
+                log_info "Git not found; installing prerequisites first..."
+                install_prerequisites
+            fi
+        fi
+
+        if command -v git &>/dev/null; then
+            git clone -b "${BOOTSTRAP_BRANCH:-master}" https://github.com/DaiTengu/slaane.sh.git "$target"
+        else
+            log_info "Git not available; copying extracted archive to $target (re-run installer to update)"
+            cp -r "$SCRIPT_DIR" "$target"
+        fi
         exec bash "$target/slaane.sh" install "$@"
     fi
     
@@ -230,7 +243,12 @@ cmd_update() {
         case "$1" in
             --help|-h) show_help; exit 0 ;;
             --module) module="$2"; shift 2 ;;
-            --branch) (cd "$SCRIPT_DIR" && git fetch && git checkout "$2" && git pull); return $? ;;
+            --branch)
+                if [[ ! -d "$SCRIPT_DIR/.git" ]]; then
+                    log_error "Repo has no .git (installed via curl). Clone the repo for branch switching."
+                    return 1
+                fi
+                (cd "$SCRIPT_DIR" && git fetch && git checkout "$2" && git pull); return $? ;;
             *) log_error "Unknown option: $1"; exit 1 ;;
         esac
     done
@@ -242,6 +260,10 @@ cmd_update() {
     elif [[ -n "$module" ]]; then
         update_module "$module"
     else
+        if [[ ! -d "$SCRIPT_DIR/.git" ]]; then
+            log_warning "Repo was installed via curl (no .git). To update: re-run the install command, or clone the repo for git-based updates."
+            return 0
+        fi
         log_info "Updating repository..."
         (cd "$SCRIPT_DIR" && git pull)
     fi
