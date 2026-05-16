@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **pip bootstrapping**: Systems lacking global pip now receive it via get-pip.py during pipx installation
 - **Prerequisites**: python3-pip detection added to prerequisite checks
 - **thefuck on Python 3.12+**: Skips pip install (imp module removed); tries system package first when `--global`
+- **nano syntax highlighting**: The forbidden glyphs now manifest in `~/.nano/` even when nano already walks the system path—the `post_install` ritual no longer abandons its sigil-clone when the framework's `MODULE_REPO` step is bypassed
 
 ### Verified
 - Tested and verified on Rocky Linux 9 (with and without sudo access)
