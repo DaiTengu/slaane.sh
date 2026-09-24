@@ -69,6 +69,11 @@ flavor rules.
 tracker. If an issue covers something already listed there, say so in the
 issue, so the `TODO.md` entry can be removed when the issue is closed.
 
+## Changes to master
+
+Never commit or push directly to `master`. Make changes on a branch and merge
+them through a pull request on GitHub.
+
 ## Labels
 
 Labels are grouped by prefix. Most issues get one `type:` label, one or more
