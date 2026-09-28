@@ -20,6 +20,24 @@ post_install() {
     if [[ -f "$theme_fix" ]]; then
         cp "$theme_fix" "$MODULE_DIR/themes/liquidprompt/liquidprompt.theme.bash"
     fi
+
+    install_blesh_fix
+}
+
+# Swap bash-it's blesh plugin for our copy, which skips ble-import when ble.sh
+# didn't load (it never loads under `bash -c`). The copy lives in enabled/,
+# which bash-it's git ignores, so `bash-it update` sees no local change.
+install_blesh_fix() {
+    local blesh_fix="$SCRIPT_DIR/config/blesh.plugin.bash"
+    [[ -f "$blesh_fix" ]] || return 0
+
+    local enabled
+    for enabled in "$MODULE_DIR"/enabled/*---blesh.plugin.bash; do
+        [[ -e "$enabled" ]] || continue
+        # Remove first: cp onto the symlink would overwrite bash-it's own file
+        rm -f "$enabled"
+        cp "$blesh_fix" "$enabled"
+    done
 }
 
 configure_bash_it_components() {
@@ -52,5 +70,7 @@ configure_bash_it_components() {
 update() {
     export BASH_IT="$MODULE_DIR"
     source "$MODULE_DIR/bash_it.sh" 2>/dev/null || true
+    # Before the update: bash-it restarts the shell once it has updated
+    install_blesh_fix
     bash-it update stable
 }
